@@ -6,7 +6,7 @@ clique:  main.o clique-count.o
 	$(CC) -o $@ $^
 
 run: 
-	./clique
+	time ./clique
 
 clean:
 	rm clique

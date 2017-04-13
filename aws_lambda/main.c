@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <fcntl.h>
-
+#include <limits.h>
 
 int get(int i, int j, int *matrix, int width) {
 	return(matrix[i * width + j]);
@@ -13,6 +13,24 @@ int get(int i, int j, int *matrix, int width) {
 
 void set(int i, int j, int *matrix, int width, int value) {
 	matrix[i * width + j] = value;
+}
+
+int getDiagonalIndex(int width) {
+	int rand_col;
+	int rand_row;
+
+	rand_col = (double)rand()/RAND_MAX * (width - 1) + 1;
+	rand_row = rand_col - 1;
+	return rand_row * width + rand_col;
+}
+
+int getRandomIndex(int width) {
+	int rand_col;
+	int rand_row;
+
+	rand_col = (double)rand()/RAND_MAX * (width - 1) + 1;
+	rand_row = (double)rand()/RAND_MAX * rand_col;
+	return rand_row * width + rand_col;
 }
 
 void copyMatrix(int *smaller, int smaller_width, int *larger, int larger_width) {
@@ -59,19 +77,27 @@ int main() {
 	int *matrix;
 	FILE *fp;
 	char buffer[1024];
-	int rand_col;
-	int rand_row;
-	int rand_index;
+	int index;
+	int bound;
 	int old_size;
+	int flip_diagonal;
+	int clique_count;
+	int flips;
+	int flip_threshold;
 
+	clique_count = INT_MAX;
+	flip_diagonal = 0;
 	old_matrix = NULL;
 	cliques = 0;
 	srand(time(NULL));
 	
-	for(counter_number = 10; counter_number < 100; counter_number++) {
+	for(counter_number = 10; counter_number < 1000; counter_number++) {
 		matrix_size = counter_number * counter_number;
 		matrix = (int *)malloc(sizeof(int) * matrix_size);
 		bzero(matrix, matrix_size * sizeof(int));
+		
+		// bound = 1 << (counter_number - 1);
+		// bound = 1;
 
 		if(old_matrix && old_matrix != matrix) {
 			copyMatrix(old_matrix, counter_number - 1, matrix, counter_number);
@@ -79,12 +105,22 @@ int main() {
 		}
 
 		while(1) {
-			rand_col = (double)rand()/RAND_MAX * (counter_number - 1) + 1;
-			rand_row = (double)rand()/RAND_MAX * rand_col;
-			rand_index = rand_row * counter_number + rand_col;
+			// if (flip_diagonal) {
+			// 	// randomly flip diagonal pieces
+			// 	if(flip_diagonal > bound) {
+			// 		flip_diagonal = 0;
+			// 	} else {
+			// 		index = getDiagonalIndex(counter_number);
 
-			// printf("changing (%d, %d) => index: %d\n", rand_col, rand_row, rand_index);
-			matrix[rand_index] ^= 1;
+			// 		flip_diagonal++;
+			// 	}
+			// }
+			// else {
+				// randomly flip bits
+			index = getRandomIndex(counter_number);
+			// }
+
+			matrix[index] ^= 1;
 			cliques = CliqueCount(matrix, counter_number);
 
 			if(cliques == 0) {
@@ -99,7 +135,14 @@ int main() {
 				bzero(buffer, sizeof(buffer));
 				old_matrix = matrix;
 				old_size = matrix_size;
+				flip_diagonal = 1;
 				break;
+
+			} else {
+				flip_threshold = 2000;
+				for(flips = 0; flips < flip_threshold; flips++) {
+					matrix[getRandomIndex(counter_number)] ^= 1;
+				}
 			}
 		}
 	}	
