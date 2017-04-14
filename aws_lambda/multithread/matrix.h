@@ -1,0 +1,20 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "thread.h"
+
+#ifndef MATRIX_H
+#define MATRIX_H
+
+int get(int i, int j, int *matrix, int width);
+
+void set(int i, int j, int *matrix, int width, int value);
+
+int getDiagonalIndex(int width);
+
+int getRandomIndex(int width);
+
+void copyMatrix(int *smaller, int smaller_width, int *larger, int larger_width);
+
+void writeToFile(FILE *fp, int *matrix, int counter_number, argStruct *arguments);
+
+#endif
