@@ -3,7 +3,7 @@ CC      = gcc
 all: clique 
 
 clique:  main.o clique-count.o thread.o matrix.o
-	$(CC) -o $@ $^
+	$(CC) -pthread -o $@ $^
 
 run: 
 	time ./clique

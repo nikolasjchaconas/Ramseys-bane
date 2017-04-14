@@ -24,7 +24,7 @@ int main() {
 	arguments = (argStruct **)malloc(sizeof(argStruct*) * NUM_THREADS);
 	pthread_mutex_init(&file_lock, NULL);
 
-	for(int thread_id = 0; thread_id < NUM_THREADS; thread_id++) {
+	for(thread_id = 0; thread_id < NUM_THREADS; thread_id++) {
 		arguments[thread_id] = (argStruct *)malloc(sizeof(argStruct));
 		arguments[thread_id]->thread_id = thread_id;
 		arguments[thread_id]->found = &found;
