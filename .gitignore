@@ -1,2 +1,4 @@
 *.o
 clique
+.DS_Store
+/counter_examples/*
