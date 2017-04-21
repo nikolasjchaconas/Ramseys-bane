@@ -20,8 +20,9 @@ class RamseyServer():
     def __init__(self, svrId):
         self.svrId = svrId
         self.bestCounterVal = 0
-        self.lock = threading.Lock()
         self.clients = {}
+        self.counterExLock = threading.Lock()
+        self.clientLock = threading.Lock()
 
         self.loadConfig()
         self.setBestCounterVal()
@@ -60,28 +61,38 @@ class RamseyServer():
 
 
     def handleNewCounterExample(self, msg):
-        self.lock.acquire()
+        self.counterExLock.acquire()
         try:
             currNum = len(msg['matrix'])
             self.bestCounterVal = max(self.bestCounterVal, currNum)
+            logMsg = 'Best counter example updated to: %d' %(self.bestCounterVal)
+            self.logger.debug(logMsg)
         finally:
-            self.lock.release()
+            self.counterExLock.release()
 
         #write to DB here
         self.notifyAllClients()
 
 
     def notifyAllClients(self):
-        for ip in self.clients:
+        clientIps = self.clients.keys()
+        for ip in clientIps:
             port = self.clients[ip]
             msg = str(self.bestCounterVal)
+            ip = LOCALHOST
             self.sendTcpMsg(ip, port, msg)
 
 
     def handleNewClient(self, msg):
     	clIp, clPort = self.extractClientIpPortInfo(msg)
-    	self.clients[clIp] = clPort
-    	print self.clients
+        self.clientLock.acquire()
+        try:
+            self.clients[clIp] = clPort
+        finally:
+            self.clientLock.release()
+    	
+    	logMsg = 'Clients are updated to: %s' %(repr(self.clients))
+        self.logger.debug(logMsg)
     	#write new client to db
 
     	msg = str(self.bestCounterVal)
@@ -107,7 +118,7 @@ class RamseyServer():
             '''When a site is down, tcp connect fails and raises exception; catching and 
             if it's a client, removing it from active client list'''
             if ip in self.clients:
-            	self.clients.pop(ip)
+             	self.clients.pop(ip)
 
             #delete from DB
 
@@ -142,6 +153,7 @@ class RamseyServer():
                 recvMsg += data
                 data = conn.recv(2048)
             
+            print 'Received message from: (%s:%d). Message is: %s' %(self.ip, self.port, recvMsg)
             msgType, msg = self.parseRecvMsg(recvMsg)
     
             if msgType == NEWCLIENT:
