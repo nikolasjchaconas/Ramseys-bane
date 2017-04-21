@@ -27,7 +27,7 @@ void * ThreadSolve(void *arg) {
 
 	srand(time(NULL));
 	printf("Beginning Thread %d\n", arguments->thread_id);
-	for(counter_number = 10; counter_number < 136; counter_number++) {
+	for(counter_number = 138; counter_number < 200; counter_number++) {
 		matrix_size = counter_number * counter_number;
 		matrix = (int *)malloc(sizeof(int) * matrix_size);
 		bzero(matrix, matrix_size * sizeof(int));
@@ -71,7 +71,7 @@ void * ThreadSolve(void *arg) {
 				break;
 			} else {
 				// need to choose this better
-				flip_threshold = matrix_size / 8;
+				flip_threshold = matrix_size / 2;
 				for(flips = 0; flips < flip_threshold; flips++) {
 					matrix[getRandomIndex(counter_number)] ^= 1;
 				}
