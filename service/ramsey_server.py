@@ -8,12 +8,17 @@ import logging
 import random
 import csv
 import copy
+from db_store import DBStore
 
 ######################Constants######################
 
 NEWCLIENT = 'NewClient'
 NEWCOUNTEREX = 'NewCounterExample'
 LOCALHOST = '127.0.0.1'
+DB_NAME = 'ramseys_bane'
+DB_USER = 'ramsey'
+COUNTER_EX_TABLE = 'counter_examples'
+CLIENTS_TABLE = 'clients'
 ######################################################
 
 class RamseyServer():
@@ -25,6 +30,7 @@ class RamseyServer():
         self.clientLock = threading.Lock()
 
         self.loadConfig()
+        self.initDbConnection()
         self.setBestCounterVal()
         self.getActiveClients()
 
@@ -38,14 +44,33 @@ class RamseyServer():
     		self.config = json.load(config_file)
 
 
+    def initDbConnection(self):
+
+        db_node = random.choice(self.config['db_nodes'])
+        self.db = DBStore(DB_NAME, DB_USER, db_node)
+
+        create_table = 'CREATE TABLE IF NOT EXISTS '+ COUNTER_EX_TABLE +' (number INT PRIMARY KEY, matrix VARCHAR(500))'
+        self.db.create(create_table)
+
+        create_table = 'CREATE TABLE IF NOT EXISTS '+ CLIENTS_TABLE +' (ip CHAR(20) PRIMARY KEY, port INT)'
+        self.db.create(create_table)
+
+
     def setBestCounterVal(self):
         '''Read from db and update in best counter example value found so far'''
-        pass
+        get_statement = 'SELECT number FROM ' + COUNTER_EX_TABLE
+        numbers = self.db.get(get_statement)
+        if numbers:
+            self.bestCounterVal = max(self.bestCounterVal, int(numbers[-1][0]))
+            self.logger.debug('Loaded the best counter example number from db: %d' %self.bestCounterVal)
 
 
     def getActiveClients(self):
     	'''Read from DB the set of active clients'''
-    	pass
+        get_statement = 'SELECT ip, port FROM ' + CLIENTS_TABLE
+        db_clients = self.db.get(get_statement)
+    	for ip, port in db_clients:
+            clients[ip] = port
 
 
     def logFormatter(self, svrInfo):
@@ -62,16 +87,22 @@ class RamseyServer():
 
     def handleNewCounterExample(self, msg):
         self.counterExLock.acquire()
+        writeToDB = False
+        currNum = len(msg['matrix'])
         try:
-            currNum = len(msg['matrix'])
-            self.bestCounterVal = max(self.bestCounterVal, currNum)
-            logMsg = 'Best counter example updated to: %d' %(self.bestCounterVal)
-            self.logger.debug(logMsg)
+            if currNum > self.bestCounterVal:
+                self.bestCounterVal = currNum
+                writeToDB = True
+                logMsg = 'Best counter example updated to: %d' %(self.bestCounterVal)
+                self.logger.debug(logMsg)
         finally:
             self.counterExLock.release()
 
-        #write to DB here
-        self.notifyAllClients()
+        '''write to DB if currNum is greater any previous value'''
+        if writeToDB:
+            insert_statement = 'INSERT INTO '+ COUNTER_EX_TABLE + ' (number, matrix) VALUES (%d, \'%s\')' % (self.bestCounterVal, str(msg['matrix']))
+            self.db.insert(insert_statement)
+            self.notifyAllClients()
 
 
     def notifyAllClients(self):
@@ -94,12 +125,13 @@ class RamseyServer():
     	logMsg = 'Clients are updated to: %s' %(repr(self.clients))
         self.logger.debug(logMsg)
     	#write new client to db
+        insert_statement = 'INSERT INTO '+ CLIENTS_TABLE + ' (ip, port) VALUES (\'%s\', %d) ' %(str(clIp), int(clPort))
+        self.db.insert(insert_statement)
 
     	msg = str(self.bestCounterVal)
     	#sending to localhost for now
     	clIp = LOCALHOST
     	self.sendTcpMsg(clIp, clPort, msg)
-
 
 
     ############################# Misc methods #############################
@@ -120,7 +152,9 @@ class RamseyServer():
             if ip in self.clients:
              	self.clients.pop(ip)
 
-            #delete from DB
+                #delete from DB
+                delete_statement = 'DELETE FROM '+ CLIENTS_TABLE + ' WHERE ip=' + ip
+                self.db.delete(delete_statement)
 
 
     def getServerIpPort(self, svrId):
