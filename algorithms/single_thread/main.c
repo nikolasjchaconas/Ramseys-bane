@@ -1,4 +1,5 @@
 #include "clique-count.h"
+#include "../client_protocol/client.h"
 #include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,20 +80,29 @@ int main() {
 	char buffer[1024];
 	int index;
 	int bound;
-	int old_size;
-	int flip_diagonal;
 	int clique_count;
 	int flips;
 	int flip_threshold;
+	int *tmp;
+	int received_number;
+	tmp = NULL;
+	old_matrix = NULL;
+
+	counter_number = sendCounterExampleToCoordinator(NULL, 0, old_matrix) + 1;
+	if(counter_number >= 0) {
+		printf("Received counter number of %d from the server\n", counter_number - 1);	
+	} else {
+		printf("Sujaya there was an error!!!\n");
+	}
 
 	clique_count = INT_MAX;
-	flip_diagonal = 0;
-	old_matrix = NULL;
 	cliques = 0;
 	srand(time(NULL));
 	
-	for(counter_number = 10; counter_number < 1000; counter_number++) {
+	for(; counter_number < 1000; counter_number++) {
+		printf("Trying to solve Ramsey Number %d\n", counter_number);
 		matrix_size = counter_number * counter_number;
+		
 		matrix = (int *)malloc(sizeof(int) * matrix_size);
 		bzero(matrix, matrix_size * sizeof(int));
 		
@@ -117,6 +127,16 @@ int main() {
 			// }
 			// else {
 				// randomly flip bits
+			received_number = pollCoordinator(NULL, 0, tmp);
+			if(received_number >= counter_number) {
+				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
+				free(matrix);
+				matrix = tmp;
+				old_matrix = tmp;
+				counter_number = received_number;
+				break;
+			}
+
 			index = getRandomIndex(counter_number);
 			// }
 
@@ -125,17 +145,21 @@ int main() {
 
 			if(cliques == 0) {
 				printf("Found Counter Example for %d!\n", counter_number);
+				received_number = sendCounterExampleToCoordinator(matrix, counter_number, tmp);
+				if(received_number > counter_number) {
+					free(matrix);
+					matrix = tmp;
+					counter_number = received_number;
+				}
 
-				sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
+				//sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
 				
-				fp = fopen(buffer, "w");
-				writeToFile(fp, matrix, counter_number);
-				fclose(fp);
+				// fp = fopen(buffer, "w");
+				// writeToFile(fp, matrix, counter_number);
+				// fclose(fp);
 
 				bzero(buffer, sizeof(buffer));
 				old_matrix = matrix;
-				old_size = matrix_size;
-				flip_diagonal = 1;
 				break;
 
 			} else {

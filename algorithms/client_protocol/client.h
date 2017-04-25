@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <signal.h>
 #include <netdb.h>
 #include <string.h>
@@ -22,7 +23,17 @@ typedef struct _client_struct {
 	char *recvline;
 } client_struct;
 
-void readCoordinatorMessage(client_struct *client_info);
-int connectToCoordinator(client_struct *client_info);
+int readCoordinatorMessage(int *out_matrix, int counter_number);
+int connectToCoordinator();
+int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix);
+int pollCoordinator(int* matrix, int counter_number, int* out_matrix);
+int numDigits(int num);
+void createClient();
+double getTime();
+void setPollInterval(double interval);
+
+extern client_struct *client_info;
+extern double last_poll_time;
+extern double poll_interval;
 
 #endif
