@@ -61,7 +61,7 @@ class RamseyClient():
     def startListening(self):
         '''Start listening for server response'''
         ip, port = self.config["clients"][self.clientId][0], self.config["clients"][self.clientId][1]
-
+        print 'Client ready to listen on (%s:%d)' %(ip, port)
         tcpClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         tcpClient.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         tcpClient.bind((ip, port))
@@ -69,13 +69,10 @@ class RamseyClient():
         while True:
             tcpClient.listen(4) 
             (conn, (cliIP,cliPort)) = tcpClient.accept()
-            
+
             msg = conn.recv(BUFFER_SIZE)
             print msg
-
-            time.sleep(5)
-            self.sendNewCounterExToServer()
-
+            #conn.close()
 
 
     def sendNewCounterExToServer(self):
@@ -96,7 +93,7 @@ class RamseyClient():
         except Exception as e:
             '''When a site is down, tcp connect fails and raises exception; catching and 
             ignoring it as we don't care about sites that are down'''
-            pass
+            print e
 
 
     def sendClientInfoToServer(self):
@@ -113,16 +110,20 @@ class RamseyClient():
             tcpClient.connect((ip, port))
             tcpClient.send(reqMsg)
             time.sleep(0.5)
+            print 'Sent message to: (%s, %d). Message is: %s' %(ip, port, reqMsg)
             tcpClient.close()
         except Exception as e:
             '''When a site is down, tcp connect fails and raises exception; catching and 
             ignoring it as we don't care about sites that are down'''
+            print e
             pass
     
 
     def sendNewClientInfo(self): 
         '''As soon as client comes up, send info to server'''
         self.sendClientInfoToServer()
+        time.sleep(2)
+        self.sendNewCounterExToServer()
         
         
 client = RamseyClient(clientId)
