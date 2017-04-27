@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include "clique-count.h"
+#include "../client_protocol/client.h"
 
 void *ThreadSolve(void *arg);
 

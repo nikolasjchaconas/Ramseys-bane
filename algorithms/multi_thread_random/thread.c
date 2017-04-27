@@ -18,16 +18,18 @@ void * ThreadSolve(void *arg) {
 	int index;
 	char buffer[1024];
 	FILE *fp;
-	int old_size;
 	int flips;
 	int flip_threshold;
 	argStruct *arguments = (argStruct *) arg;
 	old_matrix = NULL;
 	cliques = 0;
+	int received_number;
+	int *tmp;
 
 	srand(time(NULL));
 	printf("Beginning Thread %d\n", arguments->thread_id);
-	for(counter_number = 138; counter_number < 200; counter_number++) {
+	for(counter_number = 100; counter_number < 1000; counter_number++) {
+		printf("Trying to Solve Ramsey Number %d\n", counter_number);
 		matrix_size = counter_number * counter_number;
 		matrix = (int *)malloc(sizeof(int) * matrix_size);
 		bzero(matrix, matrix_size * sizeof(int));
@@ -38,12 +40,21 @@ void * ThreadSolve(void *arg) {
 		}
 
 		while(1) {
+			received_number = pollCoordinator(tmp);
+
+			if(received_number >= counter_number) {
+				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
+				free(matrix);
+				matrix = tmp;
+				old_matrix = tmp;
+				counter_number = received_number;
+				updateFoundNumber(arguments, counter_number);
+				break;
+			}
 			if(*(arguments->found) >= counter_number) {
 				counter_number = *(arguments->found);
 				printf("Thread %d switching to search for %d\n", arguments->thread_id, counter_number+1);
 				old_matrix = matrix;
-				old_size = matrix_size;
-
 				break;
 			}
 			index = getRandomIndex(counter_number);
@@ -56,6 +67,13 @@ void * ThreadSolve(void *arg) {
 					updateFoundNumber(arguments, counter_number);
 					printf("Thread %d Found Counter Example for %d!\n", arguments->thread_id, counter_number);
 
+					received_number = sendCounterExampleToCoordinator(matrix, counter_number, tmp);
+					if(received_number > counter_number) {
+						free(matrix);
+						matrix = tmp;
+						counter_number = received_number;
+					}
+
 					sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
 					
 					fp = fopen(buffer, "w");
@@ -66,7 +84,6 @@ void * ThreadSolve(void *arg) {
 				}
 
 				old_matrix = matrix;
-				old_size = matrix_size;
 
 				break;
 			} else {
