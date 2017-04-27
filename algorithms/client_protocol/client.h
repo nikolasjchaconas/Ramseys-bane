@@ -22,19 +22,20 @@ typedef struct _client_struct {
 	int sockfd;
 	struct sockaddr_in serveraddr;
 	char *recvline;
+	double last_poll_time;
 } client_struct;
 
 
 int getRandomNumber(int bound);
 
-int readCoordinatorMessage(int *out_matrix, int counter_number);
+int readCoordinatorMessage(int *out_matrix, int counter_number, client_struct *client_info);
 int connectToCoordinator();
-int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix);
-int pollCoordinator(int* out_matrix);
+int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix, client_struct *client_info);
+int pollCoordinator(int* out_matrix, client_struct *client_info);
 int numDigits(int num);
 void createClient();
 double getTime();
-void setPollInterval(double interval);
+void setPollInterval(double interval, client_struct *client_info);
 
 extern client_struct *client_info;
 extern double last_poll_time;

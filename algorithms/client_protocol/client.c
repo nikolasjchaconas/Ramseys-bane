@@ -6,10 +6,7 @@
 
 #define MAX_PAYLOAD_SIZE (1024 * 1024)
 
-client_struct *client_info = NULL;
-
 double poll_interval_seconds = 60;
-double last_poll_time = 0;
 
 int getRandomNumber(int bound) {
 	int rand_num;
@@ -26,12 +23,12 @@ double getTime() {
 	return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
 
-void setPollInterval(double interval) {
+void setPollInterval(double interval, client_struct *client_info) {
 	poll_interval_seconds = interval;
-	last_poll_time = -interval;
+	client_info->last_poll_time = -interval;
 }
 
-int readCoordinatorMessage(int *out_matrix, int counter_number) {
+int readCoordinatorMessage(int *out_matrix, int counter_number, client_struct *client_info) {
 	long bytes_read;
 	int coordinator_number;
 	char *index;
@@ -97,21 +94,21 @@ int numDigits(int num) {
 	return digits;
 }
 
-int pollCoordinator(int* out_matrix) {
+int pollCoordinator(int* out_matrix, client_struct *client_info) {
 	double time_waited;
 
-	time_waited = getTime() - last_poll_time;
+	time_waited = getTime() - client_info->last_poll_time;
 
 	// printf("time waited is %f and interval is %f and last time is %f\n", time_waited, poll_interval_seconds, last_poll_time);
 	if(time_waited > poll_interval_seconds) {
 		printf("Polling\n");
-		return sendCounterExampleToCoordinator(NULL, 0, out_matrix);
+		return sendCounterExampleToCoordinator(NULL, 0, out_matrix, client_info);
 	} else {
 		return 0;
 	}
 }
 
-int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix) {
+int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix, client_struct *client_info) {
 	int error;
 	int len;
 	int ret;
@@ -122,13 +119,9 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	double time_waited;
 
 
-	last_poll_time = getTime();
+	client_info->last_poll_time = getTime();
 
-	if(!client_info) {
-		createClient();
-	}
-
-	error = connectToCoordinator();
+	error = connectToCoordinator(client_info);
 
 	if(error) {
 		printf("Could not connect to a coordinator\n");
@@ -158,12 +151,14 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	// printf("wrote out %d bytes to server: %s\n", ret, buffer);
 
 	//out_matrix will contain currrent counter example
-	ret = readCoordinatorMessage(out_matrix, counter_number);
+	ret = readCoordinatorMessage(out_matrix, counter_number, client_info);
 	printf("Read from the coordinator\n");
 
 	if(ret < 0) {
 		printf("error\n");
 	}
+
+	close(client_info->sockfd);
 	free(buffer);
 	return ret;
 
@@ -181,7 +176,7 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	// }
 }
 
-int connectToCoordinator() {
+int connectToCoordinator(client_struct *client_info) {
 	int i;
 	int coordinator;
 	int ret;
@@ -242,11 +237,10 @@ int connectToCoordinator() {
 	return 0;
 }
 
-void createClient() {
+void createClient(client_struct *client_info) {
 	printf("creating client\n");
-	client_info = (client_struct*)malloc(sizeof(client_struct));
-
 	client_info->known_coordinator = 0;
+	client_info->last_poll_time = 0;
 	client_info->num_coordinators = 3;
 	client_info->coordinator_ips = (char **)malloc(sizeof(char*) * client_info->num_coordinators);
 	client_info->coordinator_ips[0] = (char *)malloc(strlen(COORDINATOR1_IP) + 1);

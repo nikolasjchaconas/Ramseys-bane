@@ -87,6 +87,10 @@ int main() {
 	int received_number;
 	tmp = NULL;
 	old_matrix = NULL;
+	client_struct *client_info;
+
+	client_info = (client_struct*)malloc(sizeof(client_struct));
+	createClient(client_info);
 
 	clique_count = INT_MAX;
 	cliques = 0;
@@ -105,7 +109,7 @@ int main() {
 		}
 
 		while(1) {
-			received_number = pollCoordinator(tmp);
+			received_number = pollCoordinator(tmp, client_info);
 			if(received_number >= counter_number) {
 				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
 				free(matrix);
@@ -122,20 +126,20 @@ int main() {
 
 			if(cliques == 0) {
 				printf("Found Counter Example for %d!\n", counter_number);
-				received_number = sendCounterExampleToCoordinator(matrix, counter_number, tmp);
+				received_number = sendCounterExampleToCoordinator(matrix, counter_number, tmp, client_info);
 				if(received_number > counter_number) {
 					free(matrix);
 					matrix = tmp;
 					counter_number = received_number;
 				}
 
-				sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
+				// sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
 				
-				fp = fopen(buffer, "w");
-				writeToFile(fp, matrix, counter_number);
-				fclose(fp);
+				// fp = fopen(buffer, "w");
+				// writeToFile(fp, matrix, counter_number);
+				// fclose(fp);
 
-				bzero(buffer, sizeof(buffer));
+				// bzero(buffer, sizeof(buffer));
 				old_matrix = matrix;
 				break;
 
