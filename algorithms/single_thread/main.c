@@ -88,26 +88,16 @@ int main() {
 	tmp = NULL;
 	old_matrix = NULL;
 
-	counter_number = sendCounterExampleToCoordinator(NULL, 0, old_matrix) + 1;
-	if(counter_number >= 0) {
-		printf("Received counter number of %d from the server\n", counter_number - 1);	
-	} else {
-		printf("Sujaya there was an error!!!\n");
-	}
-
 	clique_count = INT_MAX;
 	cliques = 0;
 	srand(time(NULL));
 	
-	for(; counter_number < 1000; counter_number++) {
+	for(counter_number = 130; counter_number < 1000; counter_number++) {
 		printf("Trying to solve Ramsey Number %d\n", counter_number);
 		matrix_size = counter_number * counter_number;
 		
 		matrix = (int *)malloc(sizeof(int) * matrix_size);
 		bzero(matrix, matrix_size * sizeof(int));
-		
-		// bound = 1 << (counter_number - 1);
-		// bound = 1;
 
 		if(old_matrix && old_matrix != matrix) {
 			copyMatrix(old_matrix, counter_number - 1, matrix, counter_number);
@@ -115,18 +105,6 @@ int main() {
 		}
 
 		while(1) {
-			// if (flip_diagonal) {
-			// 	// randomly flip diagonal pieces
-			// 	if(flip_diagonal > bound) {
-			// 		flip_diagonal = 0;
-			// 	} else {
-			// 		index = getDiagonalIndex(counter_number);
-
-			// 		flip_diagonal++;
-			// 	}
-			// }
-			// else {
-				// randomly flip bits
 			received_number = pollCoordinator(NULL, 0, tmp);
 			if(received_number >= counter_number) {
 				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
@@ -138,7 +116,6 @@ int main() {
 			}
 
 			index = getRandomIndex(counter_number);
-			// }
 
 			matrix[index] ^= 1;
 			cliques = CliqueCount(matrix, counter_number);
@@ -152,18 +129,18 @@ int main() {
 					counter_number = received_number;
 				}
 
-				//sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
+				sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
 				
-				// fp = fopen(buffer, "w");
-				// writeToFile(fp, matrix, counter_number);
-				// fclose(fp);
+				fp = fopen(buffer, "w");
+				writeToFile(fp, matrix, counter_number);
+				fclose(fp);
 
 				bzero(buffer, sizeof(buffer));
 				old_matrix = matrix;
 				break;
 
 			} else {
-				flip_threshold = 2000;
+				flip_threshold = matrix_size/4;
 				for(flips = 0; flips < flip_threshold; flips++) {
 					matrix[getRandomIndex(counter_number)] ^= 1;
 				}

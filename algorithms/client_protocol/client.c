@@ -1,22 +1,29 @@
 #include "client.h"
 
-#define COORDINATOR1_IP "169.231.16.241"
-#define COORDINATOR2_IP "169.231.16.241"
-#define COORDINATOR3_IP "169.231.16.241"
+#define COORDINATOR1_IP "169.231.235.33"
+#define COORDINATOR2_IP "169.231.235.124"
+#define COORDINATOR3_IP "169.231.235.86"
 
 #define MAX_PAYLOAD_SIZE (1024 * 1024)
 
 client_struct *client_info = NULL;
 
-double poll_interval_seconds = 5;
+double poll_interval_seconds = 60;
 double last_poll_time = 0;
 
+int getRandomNumber(int bound) {
+	int rand_num;
+
+	rand_num = (double)rand()/RAND_MAX * bound;
+	return rand_num;
+}
+
 double getTime() {
-    struct timeval time;
-    if (gettimeofday(&time,NULL)){
-       return 0;
-    }
-    return (double)time.tv_sec + (double)time.tv_usec * .000001;
+	struct timeval time;
+	if (gettimeofday(&time,NULL)){
+	   return 0;
+	}
+	return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
 
 void setPollInterval(double interval) {
@@ -157,7 +164,7 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	if(ret < 0) {
 		printf("error\n");
 	}
-
+	free(buffer);
 	return ret;
 
 
@@ -176,6 +183,10 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 
 int connectToCoordinator() {
 	int i;
+	int coordinator;
+	int ret;
+
+	
 	client_info->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(client_info->sockfd < 0)
 	{
@@ -183,26 +194,53 @@ int connectToCoordinator() {
 		return 1;
 	}
 
-	for(i = 0; i < client_info->num_coordinators; i++) {
-		printf("Connecting to Coordinator %d at IP %s\n", 1 + i, client_info->coordinator_ips[i]);
+	//try to connect to random coordinator
+	coordinator = getRandomNumber(client_info->num_coordinators);
 
-		client_info->serveraddr.sin_family = AF_INET;
-		client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->coordinator_ips[i]);
-		client_info->serveraddr.sin_port = htons(client_info->coordinator_ports[i]); 
+	printf("Connecting to Coordinator %d at IP %s\n", 1 + coordinator, client_info->coordinator_ips[coordinator]);
 
-		if(connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr)) < 0) {
-			printf("Connection Failed to Coordinator %d\n", i);
-			perror("Error");
-		} else {
-			client_info->known_coordinator = i;
-			break;
+	client_info->serveraddr.sin_family = AF_INET;
+	client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->coordinator_ips[coordinator]);
+	client_info->serveraddr.sin_port = htons(client_info->coordinator_ports[coordinator]); 
+
+	ret = connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr)); 
+
+	if (ret == 0) {
+		printf("Connection Succeeded.\n");
+		client_info->known_coordinator = coordinator;
+	} else {
+		printf("Connection Failed to Coordinator %d\n", coordinator + 1);
+		perror("CONNECTION ERROR");
+		for(i = 0; i < client_info->num_coordinators; i++) {
+			if(i != coordinator) {
+				printf("Connecting to Coordinator %d at IP %s\n", 1 + i, client_info->coordinator_ips[i]);
+
+				client_info->serveraddr.sin_family = AF_INET;
+				client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->coordinator_ips[i]);
+				client_info->serveraddr.sin_port = htons(client_info->coordinator_ports[i]); 
+
+				ret = connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr));
+
+				if (ret == 0){
+					printf("Connection Succeeded.\n");
+					client_info->known_coordinator = i;
+					break;
+				} else {
+					printf("Connection Failed to Coordinator %d\n", i + 1);
+					perror("CONNECTION ERROR");
+				}
+			}
 		}
 	}
+
+	
+
 	if(i == client_info->num_coordinators) {
 		printf("Could not connect to any Coordinators!\n");
 		perror("ERROR");
 		return 1;
 	}
+
 	printf("Connected to Coordinator %d at IP %s\n", client_info->known_coordinator + 1, client_info->coordinator_ips[client_info->known_coordinator]);
 	return 0;
 }
