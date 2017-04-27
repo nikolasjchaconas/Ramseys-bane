@@ -105,7 +105,7 @@ int main() {
 		}
 
 		while(1) {
-			received_number = pollCoordinator(NULL, 0, tmp);
+			received_number = pollCoordinator(tmp);
 			if(received_number >= counter_number) {
 				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
 				free(matrix);

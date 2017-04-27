@@ -30,7 +30,7 @@ int getRandomNumber(int bound);
 int readCoordinatorMessage(int *out_matrix, int counter_number);
 int connectToCoordinator();
 int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix);
-int pollCoordinator(int* matrix, int counter_number, int* out_matrix);
+int pollCoordinator(int* out_matrix);
 int numDigits(int num);
 void createClient();
 double getTime();

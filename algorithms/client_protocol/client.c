@@ -97,7 +97,7 @@ int numDigits(int num) {
 	return digits;
 }
 
-int pollCoordinator(int* matrix, int counter_number, int* out_matrix) {
+int pollCoordinator(int* out_matrix) {
 	double time_waited;
 
 	time_waited = getTime() - last_poll_time;
@@ -105,9 +105,9 @@ int pollCoordinator(int* matrix, int counter_number, int* out_matrix) {
 	// printf("time waited is %f and interval is %f and last time is %f\n", time_waited, poll_interval_seconds, last_poll_time);
 	if(time_waited > poll_interval_seconds) {
 		printf("Polling\n");
-		return sendCounterExampleToCoordinator(matrix, counter_number, out_matrix);
+		return sendCounterExampleToCoordinator(NULL, 0, out_matrix);
 	} else {
-		return counter_number;
+		return 0;
 	}
 }
 
@@ -210,7 +210,6 @@ int connectToCoordinator() {
 		client_info->known_coordinator = coordinator;
 	} else {
 		printf("Connection Failed to Coordinator %d\n", coordinator + 1);
-		perror("CONNECTION ERROR");
 		for(i = 0; i < client_info->num_coordinators; i++) {
 			if(i != coordinator) {
 				printf("Connecting to Coordinator %d at IP %s\n", 1 + i, client_info->coordinator_ips[i]);
@@ -227,7 +226,6 @@ int connectToCoordinator() {
 					break;
 				} else {
 					printf("Connection Failed to Coordinator %d\n", i + 1);
-					perror("CONNECTION ERROR");
 				}
 			}
 		}
@@ -237,7 +235,6 @@ int connectToCoordinator() {
 
 	if(i == client_info->num_coordinators) {
 		printf("Could not connect to any Coordinators!\n");
-		perror("ERROR");
 		return 1;
 	}
 
