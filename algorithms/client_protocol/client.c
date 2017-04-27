@@ -243,6 +243,7 @@ int connectToCoordinator() {
 }
 
 void createClient() {
+	printf("creating client\n");
 	client_info = (client_struct*)malloc(sizeof(client_struct));
 
 	client_info->known_coordinator = 0;
@@ -254,6 +255,7 @@ void createClient() {
 	strcpy(client_info->coordinator_ips[0], COORDINATOR1_IP);
 	strcpy(client_info->coordinator_ips[1], COORDINATOR2_IP);
 	strcpy(client_info->coordinator_ips[2], COORDINATOR3_IP);
+	client_info->coordinator_ports = (int *)malloc(sizeof(int) * client_info->num_coordinators);
 	client_info->coordinator_ports[0] = 5001;
 	client_info->coordinator_ports[1] = 5001;
 	client_info->coordinator_ports[2] = 5001;
