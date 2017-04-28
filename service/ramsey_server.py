@@ -9,6 +9,8 @@ import random
 import csv
 import copy
 from db_store import DBStore
+from subprocess import call
+import os
 
 ######################Constants######################
 
@@ -17,6 +19,7 @@ DB_NAME = 'ramseys_bane'
 DB_USER = 'ramsey'
 COUNTER_EX_TABLE = 'counter_examples'
 BUFFER_SIZE = 1024*1024
+COUNTER_EX_DIR = 'counter_examples'
 
 ######################################################
 
@@ -70,6 +73,7 @@ class RamseyServer():
         '''Logging info'''
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
+        logging.basicConfig(filename='server.log',level=logging.DEBUG)
         ch = logging.StreamHandler()
         formatter = logging.Formatter('%(svr_name)s: %(message)s')
         ch.setFormatter(formatter)
@@ -110,6 +114,7 @@ class RamseyServer():
             self.db.insert(insert_statement)
 
         self.replyToClient(conn)
+        self.postOnSlack()
 
 
     def replyToClient(self, conn):
@@ -128,6 +133,36 @@ class RamseyServer():
     def getServerIpPort(self, svrId):
         '''Get ip and port on which server is listening from config'''
         return self.config['servers'][svrId][0], self.config['servers'][svrId][1]
+
+
+
+    def createExampleFile(self):
+        try:
+            if not os.path.exists(COUNTER_EX_DIR):
+                os.makedirs(COUNTER_EX_DIR)
+            f= open(COUNTER_EX_DIR + '/' + str(self.bestCounterVal) + '.txt','w+')
+            f.write(self.bestMatrix)
+            f.close()
+        except Exception as e:
+            self.logger.debug(e)
+            self.logger.debug('Some error while writing to file! Ignoring it!')
+
+        
+    def postOnSlack(self):
+        self.createExampleFile()
+        try:
+            cmd = 'curl -F file=@' + COUNTER_EX_DIR + '/' + str(self.bestCounterVal) + '.txt'
+            cmd += ' -F channels=#counter_examples -F token=xoxp-168043439156-168044120404-175871744339-d470018d55873ffc1f59b0e8b1d42f17'
+            cmd += ' https://slack.com/api/files.upload'
+            # cmd = "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\""
+            # cmd += str(self.bestCounterVal) + "-" + self.bestMatrix 
+            # cmd += "\"}' https://hooks.slack.com/services/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"
+            
+            os.system(cmd)
+        except Exception as e:
+            self.logger.debug(e)
+            self.logger.debug('Some error while posting on Slack! Ignoring it!')
+        
 
 ####################################################################################### 
 
@@ -153,7 +188,7 @@ class RamseyServer():
             while len(data) < dataSize:
                 data += conn.recv(BUFFER_SIZE)
 
-            print 'Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, currNum)
+            self.srvr.logger.debug('Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, currNum))
             
             self.srvr.handleNewCounterExample(conn, data)
  
@@ -168,7 +203,7 @@ class RamseyServer():
         tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         tcpServer.bind((ip, port))
 
-        print 'Server ready to listen on (%s:%d)' %(ip, port)
+        self.logger.debug('Server ready to listen on (%s:%d)' %(ip, port))
         while True: 
             tcpServer.listen(4) 
             (conn, (cliIP,cliPort)) = tcpServer.accept()
