@@ -6,7 +6,7 @@ clique:  main.o clique-count.o ../client_protocol/client.o
 	$(CC) -o $@ $^
 
 run: 
-	time ./clique
+	nohup ./clique &
 
 clean:
 	rm *.o
