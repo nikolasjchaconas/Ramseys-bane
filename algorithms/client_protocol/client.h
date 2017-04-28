@@ -37,8 +37,6 @@ void createClient();
 double getTime();
 void setPollInterval(double interval, client_struct *client_info);
 
-extern client_struct *client_info;
-extern double last_poll_time;
 extern double poll_interval;
 
 #endif

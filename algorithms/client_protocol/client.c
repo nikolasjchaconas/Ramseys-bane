@@ -242,6 +242,7 @@ void createClient(client_struct *client_info) {
 	client_info->known_coordinator = 0;
 	client_info->last_poll_time = 0;
 	client_info->num_coordinators = 3;
+	client_info->recvline = (char*)malloc(sizeof(char) * MAX_PAYLOAD_SIZE);
 	client_info->coordinator_ips = (char **)malloc(sizeof(char*) * client_info->num_coordinators);
 	client_info->coordinator_ips[0] = (char *)malloc(strlen(COORDINATOR1_IP) + 1);
 	client_info->coordinator_ips[1] = (char *)malloc(strlen(COORDINATOR2_IP) + 1);
