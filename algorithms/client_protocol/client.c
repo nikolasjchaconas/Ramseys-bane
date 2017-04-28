@@ -3,6 +3,8 @@
 #define COORDINATOR1_IP "169.231.235.33"
 #define COORDINATOR2_IP "169.231.235.124"
 #define COORDINATOR3_IP "169.231.235.86"
+#define NUM_COORDINATORS 3
+#define COORDINATOR_PORT 5001
 
 #define MAX_PAYLOAD_SIZE (1024 * 1024)
 
@@ -204,7 +206,7 @@ int connectToCoordinator(client_struct *client_info) {
 		client_info->known_coordinator = coordinator;
 	} else {
 		printf("Connection Failed to Coordinator %d\n", coordinator + 1);
-		perror("ERROR:");
+		perror("ERROR");
 		for(i = 0; i < client_info->num_coordinators; i++) {
 			if(i != coordinator) {
 				printf("Connecting to Coordinator %d at IP %s\n", 1 + i, client_info->coordinator_ips[i]);
@@ -220,7 +222,7 @@ int connectToCoordinator(client_struct *client_info) {
 					break;
 				} else {
 					printf("Connection Failed to Coordinator %d\n", i + 1);
-					perror("ERROR:");
+					perror("ERROR");
 				}
 			}
 		}
@@ -240,7 +242,7 @@ void createClient(client_struct *client_info) {
 	printf("creating client\n");
 	client_info->known_coordinator = 0;
 	client_info->last_poll_time = 0;
-	client_info->num_coordinators = 3;
+	client_info->num_coordinators = NUM_COORDINATORS;
 	client_info->recvline = (char*)malloc(sizeof(char) * MAX_PAYLOAD_SIZE);
 	client_info->coordinator_ips = (char **)malloc(sizeof(char*) * client_info->num_coordinators);
 	client_info->coordinator_ips[0] = (char *)malloc(strlen(COORDINATOR1_IP) + 1);
@@ -250,7 +252,7 @@ void createClient(client_struct *client_info) {
 	strcpy(client_info->coordinator_ips[1], COORDINATOR2_IP);
 	strcpy(client_info->coordinator_ips[2], COORDINATOR3_IP);
 	client_info->coordinator_ports = (int *)malloc(sizeof(int) * client_info->num_coordinators);
-	client_info->coordinator_ports[0] = 5001;
-	client_info->coordinator_ports[1] = 5001;
-	client_info->coordinator_ports[2] = 5001;
+	client_info->coordinator_ports[0] = COORDINATOR_PORT;
+	client_info->coordinator_ports[1] = COORDINATOR_PORT;
+	client_info->coordinator_ports[2] = COORDINATOR_PORT;
 }
