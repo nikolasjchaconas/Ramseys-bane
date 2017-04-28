@@ -113,9 +113,10 @@ class RamseyServer():
         if writeToDB:
             insert_statement = 'INSERT INTO '+ COUNTER_EX_TABLE + ' (number, matrix) VALUES (%d, \'%s\')' % (self.bestCounterVal, matrix)
             self.db.insert(insert_statement)
+            self.postOnSlack()
 
         self.replyToClient(conn)
-        self.postOnSlack()
+        
 
 
     def replyToClient(self, conn):
