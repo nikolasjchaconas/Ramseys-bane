@@ -47,7 +47,8 @@ class RamseyServer():
 
     def initDbConnection(self):
 
-        db_node = random.choice(self.config['db_nodes'])
+        #db_node = random.choice(self.config['db_nodes'])
+        db_node, _ = self.getServerIpPort(self.svrId)
         self.db = DBStore(DB_NAME, DB_USER, db_node)
 
         create_table = 'CREATE TABLE IF NOT EXISTS '+ COUNTER_EX_TABLE +' (number INT PRIMARY KEY, matrix VARCHAR)'
@@ -112,9 +113,10 @@ class RamseyServer():
         if writeToDB:
             insert_statement = 'INSERT INTO '+ COUNTER_EX_TABLE + ' (number, matrix) VALUES (%d, \'%s\')' % (self.bestCounterVal, matrix)
             self.db.insert(insert_statement)
+            self.postOnSlack()
 
         self.replyToClient(conn)
-        self.postOnSlack()
+        
 
 
     def replyToClient(self, conn):
