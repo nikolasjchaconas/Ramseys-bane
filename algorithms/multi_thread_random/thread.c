@@ -29,7 +29,7 @@ void * ThreadSolve(void *arg) {
 
 	client_info = (client_struct*)malloc(sizeof(client_struct));
 	createClient(client_info);
-	
+
 	srand(time(NULL));
 	printf("Beginning Thread %d\n", arguments->thread_id);
 	for(counter_number = 130; counter_number < 1000; counter_number++) {
@@ -41,6 +41,7 @@ void * ThreadSolve(void *arg) {
 		if(old_matrix && old_matrix != matrix) {
 			copyMatrix(old_matrix, counter_number - 1, matrix, counter_number);
 			free(old_matrix);
+			old_matrix = NULL;
 		}
 
 		while(1) {
