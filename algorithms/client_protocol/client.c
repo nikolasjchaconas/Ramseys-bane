@@ -6,7 +6,7 @@
 
 #define MAX_PAYLOAD_SIZE (1024 * 1024)
 
-double poll_interval_seconds = 60;
+double poll_interval_seconds = 180;
 
 int getRandomNumber(int bound) {
 	int rand_num;
