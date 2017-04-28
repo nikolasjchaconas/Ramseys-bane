@@ -124,7 +124,7 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	error = connectToCoordinator(client_info);
 
 	if(error) {
-		printf("Could not connect to a coordinator\n");
+		close(client_info->sockfd);
 		return -1;
 	}
 
@@ -185,7 +185,7 @@ int connectToCoordinator(client_struct *client_info) {
 	client_info->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(client_info->sockfd < 0)
 	{
-		printf("Error creating socket");
+		perror("Error creating socket\n");
 		return 1;
 	}
 
@@ -201,10 +201,10 @@ int connectToCoordinator(client_struct *client_info) {
 	ret = connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr)); 
 
 	if (ret == 0) {
-		printf("Connection Succeeded.\n");
 		client_info->known_coordinator = coordinator;
 	} else {
 		printf("Connection Failed to Coordinator %d\n", coordinator + 1);
+		perror("ERROR:");
 		for(i = 0; i < client_info->num_coordinators; i++) {
 			if(i != coordinator) {
 				printf("Connecting to Coordinator %d at IP %s\n", 1 + i, client_info->coordinator_ips[i]);
@@ -216,11 +216,11 @@ int connectToCoordinator(client_struct *client_info) {
 				ret = connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr));
 
 				if (ret == 0){
-					printf("Connection Succeeded.\n");
 					client_info->known_coordinator = i;
 					break;
 				} else {
 					printf("Connection Failed to Coordinator %d\n", i + 1);
+					perror("ERROR:");
 				}
 			}
 		}
@@ -229,7 +229,6 @@ int connectToCoordinator(client_struct *client_info) {
 	
 
 	if(i == client_info->num_coordinators) {
-		printf("Could not connect to any Coordinators!\n");
 		return 1;
 	}
 
