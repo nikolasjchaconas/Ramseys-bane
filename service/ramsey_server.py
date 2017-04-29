@@ -47,8 +47,8 @@ class RamseyServer():
 
     def initDbConnection(self):
 
-        #db_node = random.choice(self.config['db_nodes'])
-        db_node, _ = self.getServerIpPort(self.svrId)
+        db_node = random.choice(self.config['db_nodes'])
+        #db_node, _ = self.getServerIpPort(self.svrId)
         self.db = DBStore(DB_NAME, DB_USER, db_node)
 
         create_table = 'CREATE TABLE IF NOT EXISTS '+ COUNTER_EX_TABLE +' (number INT PRIMARY KEY, matrix VARCHAR)'
