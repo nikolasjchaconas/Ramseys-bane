@@ -195,7 +195,8 @@ int connectToCoordinator(client_struct *client_info) {
 	coordinator = getRandomNumber(client_info->num_coordinators);
 
 	printf("Connecting to Coordinator %d at IP %s\n", 1 + coordinator, client_info->coordinator_ips[coordinator]);
-
+	
+	memset(&client_info->serveraddr, 0, sizeof(client_info->serveraddr));
 	client_info->serveraddr.sin_family = AF_INET;
 	client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->coordinator_ips[coordinator]);
 	client_info->serveraddr.sin_port = htons(client_info->coordinator_ports[coordinator]); 
@@ -206,11 +207,19 @@ int connectToCoordinator(client_struct *client_info) {
 		client_info->known_coordinator = coordinator;
 	} else {
 		printf("Connection Failed to Coordinator %d\n", coordinator + 1);
-		perror("ERROR");
+		perror("ERROR1");
 		for(i = 0; i < client_info->num_coordinators; i++) {
 			if(i != coordinator) {
+				close(client_info->sockfd);
+				client_info->sockfd = socket(AF_INET, SOCK_STREAM, 0);
+				if(client_info->sockfd < 0)
+				{
+					perror("Error creating socket\n");
+					return 1;
+				}
 				printf("Connecting to Coordinator %d at IP %s\n", 1 + i, client_info->coordinator_ips[i]);
 
+				memset(&client_info->serveraddr, 0, sizeof(client_info->serveraddr));
 				client_info->serveraddr.sin_family = AF_INET;
 				client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->coordinator_ips[i]);
 				client_info->serveraddr.sin_port = htons(client_info->coordinator_ports[i]); 
@@ -222,7 +231,7 @@ int connectToCoordinator(client_struct *client_info) {
 					break;
 				} else {
 					printf("Connection Failed to Coordinator %d\n", i + 1);
-					perror("ERROR");
+					perror("ERROR2");
 				}
 			}
 		}
