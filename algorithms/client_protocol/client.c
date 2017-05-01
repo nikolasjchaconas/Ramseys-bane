@@ -161,7 +161,9 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	}
 
 	close(client_info->sockfd);
+	printf("freeing buffer\n");
 	free(buffer);
+	buffer = NULL;
 	return ret;
 
 
