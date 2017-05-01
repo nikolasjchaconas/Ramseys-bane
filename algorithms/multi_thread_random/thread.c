@@ -1,11 +1,17 @@
 #include "thread.h"
 #include "matrix.h"
 
-void updateFoundNumber(argStruct *arguments, int found) {
-	// pthread_mutex_lock(lock);
-	*(arguments->found) = found;
-	printf("updating found to %d\n", found);
-	// pthread_mutex_unlock(lock);
+int updateFoundNumber(argStruct *arguments, int found) {
+	int num;
+	pthread_mutex_lock(arguments->file_lock);
+	if(found > *(arguments->found)) {
+		*(arguments->found) = found;
+		printf("updating found to %d\n", found);
+	}
+
+	num = *(arguments->found);
+	pthread_mutex_unlock(arguments->file_lock);
+	return num;
 }
 
 void * ThreadSolve(void *arg) {
