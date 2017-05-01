@@ -40,6 +40,7 @@ void * ThreadSolve(void *arg) {
 
 		if(old_matrix && old_matrix != matrix) {
 			copyMatrix(old_matrix, counter_number - 1, matrix, counter_number);
+			printf("freeing old matrix\n");
 			free(old_matrix);
 			old_matrix = NULL;
 		}
@@ -49,6 +50,7 @@ void * ThreadSolve(void *arg) {
 
 			if(received_number >= counter_number) {
 				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
+				printf("freeing matrix\n");
 				free(matrix);
 				matrix = tmp;
 				old_matrix = tmp;
@@ -74,6 +76,7 @@ void * ThreadSolve(void *arg) {
 
 					received_number = sendCounterExampleToCoordinator(matrix, counter_number, tmp, client_info);
 					if(received_number > counter_number) {
+						printf("freeing matrix here\n");
 						free(matrix);
 						matrix = tmp;
 						counter_number = received_number;
