@@ -2,7 +2,7 @@
 cd ~/Ramseys-bane/algorithms/multi_thread_random/
 
 make run
-sleep 5
+sleep 5m
 PROCESS=$(pgrep clique)
 
 while [[ 1 == 1 ]]; do
@@ -11,6 +11,6 @@ while [[ 1 == 1 ]]; do
 		make run
 	else
 		echo sleeping
-		sleep 5
+		sleep 5m
 	fi
 done
