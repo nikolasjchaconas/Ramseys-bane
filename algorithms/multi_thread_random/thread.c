@@ -1,5 +1,6 @@
 #include "thread.h"
 #include "matrix.h"
+#include <math.h>
 
 int updateFoundNumber(argStruct *arguments, int found) {
 	int num;
@@ -19,15 +20,13 @@ void * ThreadSolve(void *arg) {
 	int matrix_size;
 	int cliques;
 	int i;
-	int *old_matrix;
-	int *matrix;
+	int *matrix = NULL;
 	int index;
 	char buffer[1024];
 	FILE *fp;
 	int flips;
 	int flip_threshold;
 	argStruct *arguments = (argStruct *) arg;
-	old_matrix = NULL;
 	cliques = 0;
 	int received_number;
 	int *tmp;
@@ -41,15 +40,32 @@ void * ThreadSolve(void *arg) {
 	for(counter_number = 130; counter_number < 1000; counter_number++) {
 		printf("Trying to Solve Ramsey Number %d\n", counter_number);
 		matrix_size = counter_number * counter_number;
+		free(matrix);
 		matrix = (int *)malloc(sizeof(int) * matrix_size);
 		bzero(matrix, matrix_size * sizeof(int));
 
-		if(old_matrix && old_matrix != matrix) {
-			copyMatrix(old_matrix, counter_number - 1, matrix, counter_number);
-			printf("freeing old matrix\n");
-			free(old_matrix);
-			old_matrix = NULL;
-		}
+		int edgesToPlace = (counter_number*(counter_number-1))/4;
+		int rowToPlace = 0;
+		int edgesToPlaceInRow = ceil((counter_number-1)/2);
+		int edgesPlacedInRow = 0;
+		
+	    for(int i = 0; i < counter_number-1; i++){
+		    int edgeValue = 1;
+		    while(1){
+			    int randRow = i;
+			    int randCol = (rand() %  (counter_number-randRow-1))+randRow+1;
+			    edgeValue = matrix[(randRow*counter_number)+randCol];
+			    if(edgeValue==0){
+			    	matrix[(randRow*counter_number)+randCol] = 1;
+			    	edgesPlacedInRow++;
+			    	if(edgesToPlaceInRow == edgesPlacedInRow){
+		    			edgesPlacedInRow = 0;
+		    			edgesToPlaceInRow = ceil((counter_number - 1 - i)/2);
+			    		break;
+			    	}
+			    }
+		    }
+	    }
 
 		while(1) {
 			received_number = pollCoordinator(tmp, client_info);
@@ -57,9 +73,7 @@ void * ThreadSolve(void *arg) {
 			if(received_number >= counter_number) {
 				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
 				printf("freeing matrix\n");
-				free(matrix);
-				matrix = tmp;
-				old_matrix = tmp;
+				free(tmp);
 				counter_number = received_number;
 				updateFoundNumber(arguments, counter_number);
 				break;
@@ -67,7 +81,6 @@ void * ThreadSolve(void *arg) {
 			if(*(arguments->found) >= counter_number) {
 				counter_number = *(arguments->found);
 				printf("Thread %d switching to search for %d\n", arguments->thread_id, counter_number+1);
-				old_matrix = matrix;
 				break;
 			}
 			index = getRandomIndex(counter_number);
@@ -83,29 +96,36 @@ void * ThreadSolve(void *arg) {
 					received_number = sendCounterExampleToCoordinator(matrix, counter_number, tmp, client_info);
 					if(received_number > counter_number) {
 						printf("freeing matrix here\n");
-						free(matrix);
-						matrix = tmp;
+						free(tmp);
 						counter_number = received_number;
 					}
 
-					// sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
-					
-					// fp = fopen(buffer, "w");
-					// writeToFile(fp, matrix, counter_number, arguments);
-					// fclose(fp);
-
-					// bzero(buffer, sizeof(buffer));
 				}
 
-				old_matrix = matrix;
 
 				break;
 			} else {
 				// need to choose this better
-				flip_threshold = matrix_size / 2;
-				for(flips = 0; flips < flip_threshold; flips++) {
-					matrix[getRandomIndex(counter_number)] ^= 1;
-				}
+				int flip_threshold = matrix_size*0.2;
+				for(int i = 0; i < flip_threshold; i++){
+       				
+       				int randRow = rand() % (counter_number-2);
+        			int randCol = (rand() %  (counter_number-randRow-1))+randRow+1;
+					int index1 = (randRow*counter_number)+randCol;
+
+					int randRow2 = randRow;//rand() % (counter_number-2);
+        			int randCol2 = (rand() %  (counter_number-randRow2-1))+randRow2+1;
+        			int index2 = (randRow2*counter_number)+randCol2;
+
+        			if((matrix[index1] ^ matrix[index2]) == 1){
+        				matrix[index1] = !matrix[index1];
+        				matrix[index2] = !matrix[index2];
+        			}
+
+    			}
+
+    			//writeToFile(stdout, matrix, counter_number, arguments);
+
 			}
 		}
 	}
