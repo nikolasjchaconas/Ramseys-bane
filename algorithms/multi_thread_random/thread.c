@@ -68,12 +68,12 @@ void * ThreadSolve(void *arg) {
 	    }
 
 		while(1) {
+			tmp = NULL;
 			received_number = pollCoordinator(tmp, client_info);
-
+			free(tmp);
 			if(received_number >= counter_number) {
 				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
 				printf("freeing matrix\n");
-				free(tmp);
 				counter_number = received_number;
 				updateFoundNumber(arguments, counter_number);
 				break;
@@ -92,13 +92,13 @@ void * ThreadSolve(void *arg) {
 				if(*(arguments->found) < counter_number) {
 					updateFoundNumber(arguments, counter_number);
 					printf("Thread %d Found Counter Example for %d!\n", arguments->thread_id, counter_number);
-
+					tmp = NULL;
 					received_number = sendCounterExampleToCoordinator(matrix, counter_number, tmp, client_info);
 					if(received_number > counter_number) {
 						printf("freeing matrix here\n");
-						free(tmp);
 						counter_number = received_number;
 					}
+					free(tmp);
 
 				}
 
