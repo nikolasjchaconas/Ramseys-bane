@@ -9,7 +9,7 @@ do
 		j="$i"
 	fi
 	
-	if [ "$j" -lt 29 ]
+	if [ "$i" -lt 29 ]
 	then
 		ssh -o "StrictHostKeyChecking no" nikolas_chaconas@linux$j.engr.ucsb.edu 'bash -s' < 'csil_scripts/terminate.sh' &
 		echo "Shutdown sent to linux$j.engr.ucsb.edu"
