@@ -1,0 +1,19 @@
+
+cockroach start --insecure --background --advertise-host=169.231.235.33
+
+cockroach start --insecure --background --advertise-host=169.231.235.86 --join=169.231.235.33:26257
+
+
+cockroach start --insecure --background --advertise-host=169.231.235.124 --join=169.231.235.86:26257
+
+cockroach start --insecure --background --advertise-host=169.231.235.115 --join=169.231.235.124:26257
+
+cockroach start --insecure --background --advertise-host=169.231.235.97 --join=169.231.235.115:26257
+
+
+
+cockroach quit --insecure
+
+cockroach user set ramsey --insecure
+cockroach sql --insecure -e 'CREATE DATABASE ramseys_bane'
+cockroach sql --insecure -e 'GRANT ALL ON DATABASE ramseys_bane TO ramsey'

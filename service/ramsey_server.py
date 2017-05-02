@@ -58,7 +58,7 @@ class RamseyServer():
     def setBestCounterVal(self):
         '''Read from db and update in best counter example value found so far'''
 
-        get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE number=(SELECT MAX(number) from ' + COUNTER_EX_TABLE
+        get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE number=(SELECT MAX(number) from ' + COUNTER_EX_TABLE + ')'
         rows = self.db.get(get_statement)
 
         self.bestCounterVal, self.bestMatrix = rows[0][0], rows[0][1]
@@ -115,7 +115,7 @@ class RamseyServer():
 
 
     def readFromDB(self):
-        get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE number=(SELECT MAX(number) from ' + COUNTER_EX_TABLE
+        get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE number=(SELECT MAX(number) from ' + COUNTER_EX_TABLE + ')'
         rows = self.db.get(get_statement)
 
         bestVal, bestMatrix = rows[0][0], rows[0][1]
