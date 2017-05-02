@@ -49,7 +49,7 @@ void * ThreadSolve(void *arg) {
 		int edgesToPlaceInRow = ceil((counter_number-1)/2);
 		int edgesPlacedInRow = 0;
 		
-	    for(int i = 0; i < counter_number-1; i++){
+	    for(i = 0; i < counter_number-1; i++){
 		    int edgeValue = 1;
 		    while(1){
 			    int randRow = i;
@@ -107,7 +107,7 @@ void * ThreadSolve(void *arg) {
 			} else {
 				// need to choose this better
 				int flip_threshold = matrix_size*0.2;
-				for(int i = 0; i < flip_threshold; i++){
+				for(i = 0; i < flip_threshold; i++){
        				
        				int randRow = rand() % (counter_number-2);
         			int randCol = (rand() %  (counter_number-randRow-1))+randRow+1;
