@@ -3,7 +3,9 @@
 #define COORDINATOR1_IP "169.231.235.33"
 #define COORDINATOR2_IP "169.231.235.124"
 #define COORDINATOR3_IP "169.231.235.86"
-#define NUM_COORDINATORS 3
+#define COORDINATOR4_IP "169.231.235.115"
+#define COORDINATOR5_IP "169.231.235.97"
+#define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
 
 #define MAX_PAYLOAD_SIZE (1024 * 1024)
@@ -259,11 +261,17 @@ void createClient(client_struct *client_info) {
 	client_info->coordinator_ips[0] = (char *)malloc(strlen(COORDINATOR1_IP) + 1);
 	client_info->coordinator_ips[1] = (char *)malloc(strlen(COORDINATOR2_IP) + 1);
 	client_info->coordinator_ips[2] = (char *)malloc(strlen(COORDINATOR3_IP) + 1);
+	client_info->coordinator_ips[3] = (char *)malloc(strlen(COORDINATOR4_IP) + 1);
+	client_info->coordinator_ips[4] = (char *)malloc(strlen(COORDINATOR5_IP) + 1);
 	strcpy(client_info->coordinator_ips[0], COORDINATOR1_IP);
 	strcpy(client_info->coordinator_ips[1], COORDINATOR2_IP);
 	strcpy(client_info->coordinator_ips[2], COORDINATOR3_IP);
+	strcpy(client_info->coordinator_ips[3], COORDINATOR4_IP);
+	strcpy(client_info->coordinator_ips[4], COORDINATOR5_IP);
 	client_info->coordinator_ports = (int *)malloc(sizeof(int) * client_info->num_coordinators);
 	client_info->coordinator_ports[0] = COORDINATOR_PORT;
 	client_info->coordinator_ports[1] = COORDINATOR_PORT;
 	client_info->coordinator_ports[2] = COORDINATOR_PORT;
+	client_info->coordinator_ports[3] = COORDINATOR_PORT;
+	client_info->coordinator_ports[4] = COORDINATOR_PORT;
 }
