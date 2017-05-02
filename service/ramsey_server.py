@@ -57,17 +57,12 @@ class RamseyServer():
 
     def setBestCounterVal(self):
         '''Read from db and update in best counter example value found so far'''
-        bestVal, bestMatrix = 0, ''
-        get_statement = 'SELECT number, matrix FROM ' + COUNTER_EX_TABLE
+
+        get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE number=(SELECT MAX(number) from ' + COUNTER_EX_TABLE
         rows = self.db.get(get_statement)
 
-        for num, matrix in rows:
-            if num > bestVal:
-                bestVal = num
-                bestMatrix = matrix
-                
-        self.bestCounterVal, self.bestMatrix = bestVal, bestMatrix
-        self.logger.debug('Loaded the best counter example number from db: %d' %self.bestCounterVal)
+        self.bestCounterVal, self.bestMatrix = rows[0][0], rows[0][1]
+        self.logger.debug('Loaded the best counter example number from db: %d' %(self.bestCounterVal))
 
 
     def logFormatter(self, svrInfo):
@@ -119,10 +114,22 @@ class RamseyServer():
         
 
 
+    def readFromDB(self):
+        get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE number=(SELECT MAX(number) from ' + COUNTER_EX_TABLE
+        rows = self.db.get(get_statement)
+
+        bestVal, bestMatrix = rows[0][0], rows[0][1]
+        return bestVal, bestMatrix
+
+
     def replyToClient(self, conn):
         '''Making sure that always the latest counter example value is sent to the client'''
+        bestVal, bestMatrix = self.readFromDB()
         self.counterExLock.acquire()
         try:
+            if bestVal > self.bestCounterVal:
+                self.bestCounterVal = bestVal
+                self.bestMatrix = bestMatrix
             reply = str(self.bestCounterVal) + ':' + self.bestMatrix
         finally:
             self.counterExLock.release()
@@ -190,7 +197,8 @@ class RamseyServer():
             while len(data) < dataSize:
                 data += conn.recv(BUFFER_SIZE)
 
-            self.srvr.logger.debug('Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, currNum))
+            if int(currNum) > 0:
+                self.srvr.logger.debug('Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, currNum))
             
             self.srvr.handleNewCounterExample(conn, data)
  
