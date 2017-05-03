@@ -1,13 +1,10 @@
 import socket 
 from threading import Thread 
-from SocketServer import ThreadingMixIn 
 import time
 import threading
 import json, sys
 import logging
 import random
-import csv
-import copy
 from db_store import DBStore
 from subprocess import call
 import os
@@ -191,17 +188,22 @@ class RamseyServer():
             conn, recvMsg = self.conn, ''
             data = conn.recv(BUFFER_SIZE)
 
-            currNum = data.split(':')[0]
-            dataSize = int(currNum)*int(currNum) + len(currNum) + 1 
-            
-            while len(data) < dataSize:
-                data += conn.recv(BUFFER_SIZE)
+            try:
+                currNum = data.split(':')[0]
+                dataSize = int(currNum)*int(currNum) + len(currNum) + 1 
+                
+                while len(data) < dataSize:
+                    data += conn.recv(BUFFER_SIZE)
 
-            if int(currNum) > 0:
-                self.srvr.logger.debug('Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, currNum))
-            
-            self.srvr.handleNewCounterExample(conn, data)
+                if int(currNum) > 0:
+                    self.srvr.logger.debug('Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, currNum))
+                
+                self.srvr.handleNewCounterExample(conn, data)
  
+            except Exception as e:
+                print e
+                self.srvr.logger.debug('Caught exception: %s' %e)
+
             '''Kill the thread after use'''
             sys.exit()
 
