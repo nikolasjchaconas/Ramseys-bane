@@ -1,5 +1,6 @@
 #include "thread.h"
 #include "matrix.h"
+#include <math.h>
 
 int updateFoundNumber(argStruct *arguments, int found) {
 	int num;
@@ -19,8 +20,7 @@ void * ThreadSolve(void *arg) {
 	int matrix_size;
 	int cliques;
 	int i;
-	int *old_matrix;
-	int *matrix;
+	int *matrix = NULL;
 	int index;
 	char buffer[1024];
 	FILE *fp;
@@ -29,13 +29,12 @@ void * ThreadSolve(void *arg) {
 	argStruct *arguments = (argStruct *) arg;
 	cliques = 0;
 	int received_number;
+	int *tmp;
 	client_struct *client_info;
-	int shift = 0;
 
 	client_info = (client_struct*)malloc(sizeof(client_struct));
 	createClient(client_info);
 	matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
-	old_matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 
 	srand(time(NULL));
 	printf("Beginning Thread %d\n", arguments->thread_id);
@@ -44,11 +43,31 @@ void * ThreadSolve(void *arg) {
 		matrix_size = counter_number * counter_number;
 		bzero(matrix, LARGEST_MATRIX_SIZE * sizeof(int));
 
-		copyMatrix(old_matrix, counter_number - 1, matrix, counter_number);	
+		int edgesToPlace = (counter_number*(counter_number-1))/4;
+		int rowToPlace = 0;
+		int edgesToPlaceInRow = ceil((counter_number-1)/2);
+		int edgesPlacedInRow = 0;
+		
+	    for(i = 0; i < counter_number-1; i++){
+		    int edgeValue = 1;
+		    while(1){
+			    int randRow = i;
+			    int randCol = (rand() %  (counter_number-randRow-1))+randRow+1;
+			    edgeValue = matrix[(randRow*counter_number)+randCol];
+			    if(edgeValue==0){
+			    	matrix[(randRow*counter_number)+randCol] = 1;
+			    	edgesPlacedInRow++;
+			    	if(edgesToPlaceInRow == edgesPlacedInRow){
+		    			edgesPlacedInRow = 0;
+		    			edgesToPlaceInRow = ceil((counter_number - 1 - i)/2);
+			    		break;
+			    	}
+			    }
+		    }
+	    }
 
 		while(1) {
-			received_number = pollCoordinator(old_matrix, client_info);
-
+			received_number = pollCoordinator(NULL, client_info);
 			if(received_number >= counter_number) {
 				printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", received_number, received_number + 1);
 				counter_number = received_number;
@@ -69,30 +88,36 @@ void * ThreadSolve(void *arg) {
 				if(*(arguments->found) < counter_number) {
 					updateFoundNumber(arguments, counter_number);
 					printf("Thread %d Found Counter Example for %d!\n", arguments->thread_id, counter_number);
-
-					received_number = sendCounterExampleToCoordinator(matrix, counter_number, old_matrix, client_info);
+					received_number = sendCounterExampleToCoordinator(matrix, counter_number, NULL, client_info);
 					if(received_number > counter_number) {
 						counter_number = received_number;
 					}
-
-					sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
-					if( access( buffer, F_OK ) == -1 ) {
-						fp = fopen(buffer, "w");
-						writeToFile(fp, matrix, counter_number, arguments);
-						fclose(fp);
-						// file doesn't exists
-					}
-
-					bzero(buffer, sizeof(buffer));
 				}
+
 
 				break;
 			} else {
 				// need to choose this better
-				flip_threshold = matrix_size / 4;
-				for(flips = 0; flips < flip_threshold; flips++) {
-					matrix[getRandomIndex(counter_number)] ^= 1;
-				}
+				int flip_threshold = matrix_size*0.2;
+				for(i = 0; i < flip_threshold; i++){
+       				
+       				int randRow = rand() % (counter_number-2);
+        			int randCol = (rand() %  (counter_number-randRow-1))+randRow+1;
+					int index1 = (randRow*counter_number)+randCol;
+
+					int randRow2 = randRow;//rand() % (counter_number-2);
+        			int randCol2 = (rand() %  (counter_number-randRow2-1))+randRow2+1;
+        			int index2 = (randRow2*counter_number)+randCol2;
+
+        			if((matrix[index1] ^ matrix[index2]) == 1){
+        				matrix[index1] = !matrix[index1];
+        				matrix[index2] = !matrix[index2];
+        			}
+
+    			}
+
+    			//writeToFile(stdout, matrix, counter_number, arguments);
+
 			}
 		}
 	}

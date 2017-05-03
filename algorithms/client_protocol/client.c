@@ -73,9 +73,9 @@ int readCoordinatorMessage(int *out_matrix, int counter_number, client_struct *c
 	}
 
 	// if my current counter number is less than the one the coordinator has
-	if(counter_number < coordinator_number) {
+	if(counter_number < coordinator_number && out_matrix) {
 		matrix_size = coordinator_number * coordinator_number;
-		out_matrix = (int *)malloc(sizeof(int) * matrix_size);
+		bzero(out_matrix, LARGEST_MATRIX_SIZE * sizeof(int));
 		for(i = 0; i < matrix_size; i++) {
 			out_matrix[i] = *(client_info->recvline + digits + i + 1) - '0';
 		}
