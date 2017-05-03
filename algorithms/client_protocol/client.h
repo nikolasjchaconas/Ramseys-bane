@@ -14,6 +14,8 @@
 #include <string.h>
 #include <fcntl.h>
 
+#define LARGEST_MATRIX_SIZE 1000*1000
+
 typedef struct _client_struct {
 	int known_coordinator;
 	int num_coordinators;
