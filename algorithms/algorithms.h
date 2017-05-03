@@ -30,7 +30,10 @@
 #define RANDOM 2
 #define RANDOM_50_50 3
 
-extern int algorithm_type;
+//write counter examples to file
+extern int WRITE_TO_FILE;
+
+extern int ALGORITHM_TYPE;
 
 #include <math.h>
 #include <pthread.h>
