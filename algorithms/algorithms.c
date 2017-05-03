@@ -83,15 +83,16 @@ void setThreads(int threading_type) {
 	printf("---------------------------------------------\n");
 	printf("\nBeginning Ramsey Solver.\n");
 	printf("\nOptions Chosen:\n");
-	switch(algorithm_type) {
+
+	switch(ALGORITHM_TYPE) {
 		case RANDOM_50_50:
-			printf("\nALGORITHM: Bjarte Random 50 50 graph algorithm \n");
+			printf("\nALGORITHM: Bjarte Random 50 50 graph algorithm\n");
 			break;
 		case RANDOM:
-			printf("\nALGORITHM: Nik Random graph algorithm \n");	
+			printf("\nALGORITHM: Nik Random Algorithm\n");	
 			break;
 		default:
-			printf("\n Algorithm type not added! Please add type to algorithms.c switch statement! \n");
+			printf("\nAlgorithm type not added! Please add type to algorithms.c switch statement!\n");
 	}
 	
 	switch(threading_type) {
@@ -119,7 +120,7 @@ void setThreads(int threading_type) {
 				error = pthread_create(&(thread_array[thread_id]), NULL, ThreadSolve, (void *)arguments[thread_id]);
 				if(error) {
 					fprintf(stderr, "error creating thread\n");
-					exit(-1);
+					exit(1);
 				}
 			}
 
@@ -134,8 +135,9 @@ void setThreads(int threading_type) {
 			break;
 
 		default:
-			printf("You did not specify a valid option\n");
-			exit(0);
+			printf("You did not specify a valid threading type.\n");
+			printf("Exiting...\n");
+			exit(1);
 	}
 
 

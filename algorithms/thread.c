@@ -51,7 +51,7 @@ void * ThreadSolve(void *arg) {
 		*		CAN SET DIFFERENT ALGORITHMS HERE
 		*
 		*/
-		switch(algorithm_type) {
+		switch(ALGORITHM_TYPE) {
 			case RANDOM_50_50:
 				initialize_50_50(matrix, counter_number);
 				break;
@@ -60,7 +60,7 @@ void * ThreadSolve(void *arg) {
 				break;
 			default:
 				printf("\n Algorithm type not added! Please add type to thread.c switch statement around line 62! \n");
-				printf("\n exiting... \n");
+				printf("\n Exiting... \n");
 				exit(1);
 		}
 		
@@ -94,17 +94,17 @@ void * ThreadSolve(void *arg) {
 					if(received_number > counter_number) {
 						counter_number = received_number;
 					} else {
-						sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
-						if( access( buffer, F_OK ) == -1 ) {
-							fp = fopen(buffer, "w");
-							writeToFile(fp, matrix, counter_number, arguments);
-							fclose(fp);
+						if(WRITE_TO_FILE) {
+							sprintf(buffer, "counter_examples/counter_%d.txt", counter_number);
+							if( access( buffer, F_OK ) == -1 ) {
+								fp = fopen(buffer, "w");
+								writeToFile(fp, matrix, counter_number, arguments);
+								fclose(fp);
+							}
 						}
-
 					}
 					bzero(buffer, sizeof(buffer));
 				}
-
 				break;
 			} else {
 
@@ -113,7 +113,7 @@ void * ThreadSolve(void *arg) {
 				*		CAN SET DIFFERENT ALGORITHMS HERE
 				*
 				*/
-				switch(algorithm_type) {
+				switch(ALGORITHM_TYPE) {
 					case RANDOM_50_50:
 						flip_50_50(matrix, counter_number, matrix_size);
 						break;
@@ -122,7 +122,7 @@ void * ThreadSolve(void *arg) {
 						break;
 					default:
 						printf("\n Algorithm type not added! Please add type to thread.c switch statement around line 124! \n");
-						printf("\n exiting... \n");
+						printf("\n Exiting... \n");
 						exit(1);
 				}
 
