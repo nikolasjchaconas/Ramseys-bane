@@ -31,6 +31,8 @@ void * ThreadSolve(void *arg) {
 	int received_number;
 	client_struct *client_info;
 	int shift = 0;
+	//useful for logging purposes
+	setbuf(stdout, NULL);
 
 	client_info = (client_struct*)malloc(sizeof(client_struct));
 	createClient(client_info);
