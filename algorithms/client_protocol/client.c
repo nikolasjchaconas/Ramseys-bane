@@ -156,14 +156,14 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 
 	//out_matrix will contain currrent counter example
 	ret = readCoordinatorMessage(out_matrix, counter_number, client_info);
-	printf("Read from the coordinator\n");
+	printf("Read from the Coordinator\n");
 
 	if(ret < 0) {
 		printf("error\n");
 	}
 
 	close(client_info->sockfd);
-	printf("freeing buffer\n");
+
 	free(buffer);
 	buffer = NULL;
 	return ret;
@@ -252,7 +252,7 @@ int connectToCoordinator(client_struct *client_info) {
 }
 
 void createClient(client_struct *client_info) {
-	printf("creating client\n");
+	printf("Creating Client...\n\n");
 	client_info->known_coordinator = 0;
 	client_info->last_poll_time = 0;
 	client_info->num_coordinators = NUM_COORDINATORS;
