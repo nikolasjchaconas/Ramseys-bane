@@ -1,6 +1,7 @@
 #!/bin/bash
-git clone https://nikolasjchaconas:Honclbrif1@github.com/nikolasjchaconas/Ramseys-bane.git
 cd ~/Ramseys-bane/algorithms/
+git fetch --all
+git checkout EucalyptusSmall
 git pull
 make clean
 make
