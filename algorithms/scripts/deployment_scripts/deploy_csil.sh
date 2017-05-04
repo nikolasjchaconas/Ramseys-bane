@@ -3,7 +3,7 @@
 
 #ssh -o "StrictHostKeyChecking no" nikolas_chaconas@csil-01.cs.ucsb.edu 'bash -s' < '../csil_scripts/git_pull.sh' &
 
-sleep 10
+# sleep 10
 for i in {1..48}
 do
 	if [ "$i" -lt 10 ]
