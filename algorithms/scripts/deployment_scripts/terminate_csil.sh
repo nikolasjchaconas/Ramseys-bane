@@ -15,6 +15,12 @@ do
 		echo "Shutdown sent to linux$j.engr.ucsb.edu"
 	fi
 
+	if [ "$i" -lt 36 ]
+	then
+		ssh -o "StrictHostKeyChecking no" nikolas_chaconas@cstl-$j.cs.ucsb.edu 'bash -s' < '../csil_scripts/terminate.sh' &
+		echo "Shutdown sent to cstl-$j.cs.ucsb.edu"
+	fi
+
 	ssh -o "StrictHostKeyChecking no" nikolas_chaconas@csil-$j.cs.ucsb.edu 'bash -s' < '../csil_scripts/terminate.sh' &
 	echo "Shutdown sent to csil-$j.cs.ucsb.edu"
 done
