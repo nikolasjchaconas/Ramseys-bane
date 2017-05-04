@@ -116,7 +116,6 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	int error;
 	int len;
 	int ret;
-	char *buffer;
 	int size;
 	int i;
 	int digits;
@@ -137,21 +136,19 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	// matrix size + digits in counter example number + colon
 	size = (counter_number * counter_number) + digits + 1;
 
-	// create buffer for sending to coordinator
-	buffer = (char *)malloc(sizeof(char) * size);
-	bzero(buffer, size * sizeof(char));
-
-	sprintf(buffer, "%d:", counter_number);
+	bzero(client_info->sendline, MAX_PAYLOAD_SIZE * sizeof(char));
+	
+	sprintf(client_info->sendline, "%d:", counter_number);
 	for(i = digits + 1; i < size; i++) {
-		sprintf(buffer + i, "%d", matrix[i - digits - 1]);
+		sprintf(client_info->sendline + i, "%d", matrix[i - digits - 1]);
 	}
 
 	// form the message and send it
-	ret = write(client_info->sockfd, buffer, size);
+	ret = write(client_info->sockfd, client_info->sendline, size);
+
 	if(ret <= 0) {
 		fprintf(stderr, "Error: wrote 0 bytes to coordinator\n");
 	}
-
 	// printf("wrote out %d bytes to server: %s\n", ret, buffer);
 
 	//out_matrix will contain currrent counter example
@@ -164,8 +161,6 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 
 	close(client_info->sockfd);
 
-	free(buffer);
-	buffer = NULL;
 	return ret;
 
 
@@ -257,6 +252,7 @@ void createClient(client_struct *client_info) {
 	client_info->last_poll_time = 0;
 	client_info->num_coordinators = NUM_COORDINATORS;
 	client_info->recvline = (char*)malloc(sizeof(char) * MAX_PAYLOAD_SIZE);
+	client_info->sendline = (char*)malloc(sizeof(char) * MAX_PAYLOAD_SIZE);
 	client_info->coordinator_ips = (char **)malloc(sizeof(char*) * client_info->num_coordinators);
 	client_info->coordinator_ips[0] = (char *)malloc(strlen(COORDINATOR1_IP) + 1);
 	client_info->coordinator_ips[1] = (char *)malloc(strlen(COORDINATOR2_IP) + 1);

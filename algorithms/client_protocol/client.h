@@ -24,6 +24,7 @@ typedef struct _client_struct {
 	int sockfd;
 	struct sockaddr_in serveraddr;
 	char *recvline;
+	char *sendline;
 	double last_poll_time;
 } client_struct;
 
