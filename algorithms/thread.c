@@ -31,12 +31,17 @@ void * ThreadSolve(void *arg) {
 	int received_number;
 	client_struct *client_info;
 	int shift = 0;
+	int attempts = 0; 
+	int* bestGraph;
+	int bestCount = 10000000;
+
 	//useful for logging purposes
 	setbuf(stdout, NULL);
 
 	client_info = (client_struct*)malloc(sizeof(client_struct));
 	createClient(client_info);
 	matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
+	bestGraph = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 	old_matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 
 	srand(time(NULL));
@@ -57,6 +62,13 @@ void * ThreadSolve(void *arg) {
 				break;
 			case RANDOM:
 				copyMatrix(old_matrix, counter_number - 1, matrix, counter_number);	
+				break;
+			case SYSTEMATIC_50_50_FLIP:
+				initialize_50_50(matrix, counter_number);
+				bestCount = FindCliqueCount(matrix,counter_number);
+				for(int i = 0; i < counter_number*counter_number; i++){
+					bestGraph[i] = matrix[i];
+				}
 				break;
 			default:
 				printf("\n Algorithm type not added! Please add type to thread.c switch statement around line 62! \n");
@@ -119,6 +131,9 @@ void * ThreadSolve(void *arg) {
 						break;
 					case RANDOM:
 						flip_random(matrix, counter_number, matrix_size);	
+						break;
+					case SYSTEMATIC_50_50_FLIP:
+						systematic_50_50_flip(matrix,counter_number,matrix_size, &attempts, bestGraph, &bestCount);	
 						break;
 					default:
 						printf("\n Algorithm type not added! Please add type to thread.c switch statement around line 124! \n");

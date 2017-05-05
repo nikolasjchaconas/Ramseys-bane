@@ -63,6 +63,98 @@ void flip_50_50(int *matrix, int counter_number, int matrix_size) {
 	}
 }
 
+void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int* attempts, int* bestGraph, int* bestCount){
+	if(*attempts < 10*counter_number){
+		// This is the exploratory phase where one always keep track of the best graph so far by random exploration. 
+		// This is meant to function a little bit like simulated annealing.
+		// The best graph after a certain number of attempts is used as the basis for a search.
+		flip_50_50(matrix, counter_number, matrix_size);
+
+		int currentCount = FindCliqueCount(matrix, counter_number);
+		printf("currentCount is: %d\n",currentCount);
+		if(currentCount < *bestCount){
+			*bestCount = currentCount;
+			for(int i = 0; i < counter_number*counter_number; i++){
+				bestGraph[i] = matrix[i];
+			}
+		}
+	}
+	else{
+		printf("Start with new best graph!\n");
+		for(int i = 0; i < counter_number*counter_number; i++){
+			matrix[i] = bestGraph[i];
+		}
+		int isNew = 0;
+		//Iterate over all rows
+		for(int row = 0; row < counter_number-2; row++){
+			//Pick the last 1 and 0 edge in the row
+			int lastIndex1InRow = (row*counter_number)+(counter_number - 1);
+			int lastIndex0InRow = (row*counter_number)+(counter_number - 1);
+			while(matrix[lastIndex1InRow]!= 1||lastIndex1InRow<row*counter_number+row+1) lastIndex1InRow--;
+			while(matrix[lastIndex0InRow]!= 0||lastIndex0InRow<row*counter_number+row+1) lastIndex0InRow--;
+
+			//init basic vars used in the search algorithm
+			int col1 = row + 1;
+			int col0 = row + 1;
+			int index1 = (row*counter_number)+col1;
+			int index0 = (row*counter_number)+col0;
+			//Flip edges until last pair of edges is flipped
+			while((index1 != lastIndex1InRow+1) && (index0 != lastIndex0InRow+1)){
+
+				//Pick the first 1 edge in the row
+				index1 = (row*counter_number)+col1;
+				while(matrix[index1] != 1){
+					col1++;
+					index1 = (row*counter_number)+col1;
+				}
+
+				//Pick the first 0 edge in the row
+				index0 = (row*counter_number)+col0;
+				while(matrix[index0] != 0){
+					col0++;
+					index0 = (row*counter_number)+col0;
+				}
+
+				//Swithc their values
+				matrix[index1] = 0;
+				matrix[index0] = 1;
+
+				//Check the new matrices cliques count
+				int cliqueInCopy = FindCliqueCount(matrix, counter_number);
+				printf("Checking out: %d\n",cliqueInCopy);
+				if(cliqueInCopy < *bestCount){
+					*bestCount = cliqueInCopy;
+					printf("bestCount is: %d\n",*bestCount);
+					for(int i = 0; i < counter_number*counter_number; i++){
+						bestGraph[i] = matrix[i];
+					}
+					isNew = 1;
+					break;
+					if(*bestCount == 0) break;
+				}
+
+				//Reset matrix back to normal
+				matrix[index1] = 1;
+				matrix[index0] = 0;
+
+				if(index0 == lastIndex0InRow && index1 != lastIndex1InRow){
+					col1++;
+					col0 = row+1;
+				}
+				else col0++;
+
+				index1 = (row*counter_number)+col1;
+				index0 = (row*counter_number)+col0;
+			}
+			if(isNew==1){
+				isNew = 0;
+				break; 
+			}
+			if(*bestCount == 0) break;
+		}		
+		(*attempts)++;
+	}
+}
 
 void setThreads(int threading_type) {
 	pthread_mutex_t file_lock;
@@ -90,6 +182,9 @@ void setThreads(int threading_type) {
 			break;
 		case RANDOM:
 			printf("\nALGORITHM: Nik Random Algorithm\n");	
+			break;
+		case SYSTEMATIC_50_50_FLIP:
+			printf("\nALGORITHM: Flip systematically while staying inside constraints\n");	
 			break;
 		default:
 			printf("\nAlgorithm type not added! Please add type to algorithms.c switch statement!\n");
@@ -139,6 +234,4 @@ void setThreads(int threading_type) {
 			printf("Exiting...\n");
 			exit(1);
 	}
-
-
 }

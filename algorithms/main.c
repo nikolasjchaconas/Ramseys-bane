@@ -24,7 +24,7 @@ RANDOM_50_50
 int main() {
 	// set algorithm type
 	// check algorithms.h for more choices
-	ALGORITHM_TYPE = RANDOM;
+	ALGORITHM_TYPE = SYSTEMATIC_50_50_FLIP;
 
 	//set whether you want counter examples written to disk
 	//(condor does not allow this)
