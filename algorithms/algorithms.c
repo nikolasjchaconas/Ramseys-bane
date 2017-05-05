@@ -64,6 +64,9 @@ void flip_50_50(int *matrix, int counter_number, int matrix_size) {
 }
 
 void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int* attempts, int* bestGraph, int* bestCount){
+	int i;
+	int row;
+	
 	if(*attempts < 10*counter_number){
 		// This is the exploratory phase where one always keep track of the best graph so far by random exploration. 
 		// This is meant to function a little bit like simulated annealing.
@@ -74,19 +77,19 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 		printf("currentCount is: %d\n",currentCount);
 		if(currentCount < *bestCount){
 			*bestCount = currentCount;
-			for(int i = 0; i < counter_number*counter_number; i++){
+			for(i = 0; i < counter_number*counter_number; i++){
 				bestGraph[i] = matrix[i];
 			}
 		}
 	}
 	else{
 		printf("Start with new best graph!\n");
-		for(int i = 0; i < counter_number*counter_number; i++){
+		for(i = 0; i < counter_number*counter_number; i++){
 			matrix[i] = bestGraph[i];
 		}
 		int isNew = 0;
 		//Iterate over all rows
-		for(int row = 0; row < counter_number-2; row++){
+		for(row = 0; row < counter_number-2; row++){
 			//Pick the last 1 and 0 edge in the row
 			int lastIndex1InRow = (row*counter_number)+(counter_number - 1);
 			int lastIndex0InRow = (row*counter_number)+(counter_number - 1);
@@ -125,7 +128,7 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 				if(cliqueInCopy < *bestCount){
 					*bestCount = cliqueInCopy;
 					printf("bestCount is: %d\n",*bestCount);
-					for(int i = 0; i < counter_number*counter_number; i++){
+					for(i = 0; i < counter_number*counter_number; i++){
 						bestGraph[i] = matrix[i];
 					}
 					isNew = 1;

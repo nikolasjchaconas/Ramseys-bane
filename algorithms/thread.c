@@ -66,7 +66,7 @@ void * ThreadSolve(void *arg) {
 			case SYSTEMATIC_50_50_FLIP:
 				initialize_50_50(matrix, counter_number);
 				bestCount = FindCliqueCount(matrix,counter_number);
-				for(int i = 0; i < counter_number*counter_number; i++){
+				for(i = 0; i < counter_number*counter_number; i++){
 					bestGraph[i] = matrix[i];
 				}
 				break;
