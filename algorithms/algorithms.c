@@ -155,8 +155,8 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 			}
 			if(*bestCount == 0) break;
 		}		
-		(*attempts)++;
 	}
+	(*attempts)++;
 }
 
 void setThreads(int threading_type) {
