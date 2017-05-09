@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ~/Ramseys-bane/algorithms/
+cd ~/Ramseys-bane/distributed_sys_flip/
 git fetch --all
 git checkout master
 git pull
