@@ -147,7 +147,8 @@ const int greedyGraphPermute(int* graph, const int nodeCount, const int cliqueCo
 
 void randomGraphPermute(int* graph, const int nodeCount, const int permuteFactor){
 	if(nodeCount > 0 && permuteFactor > 0){
-		for(int i = 0; i < permuteFactor; i++){
+		int i;
+		for(i = 0; i < permuteFactor; i++){
 			int randRow = rand() % (nodeCount-2);
 			int randCol = (rand() %  (nodeCount-randRow-1))+randRow+1;
 			int index1 = (randRow*nodeCount)+randCol;

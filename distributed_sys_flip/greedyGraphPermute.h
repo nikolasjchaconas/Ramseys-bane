@@ -1,4 +1,8 @@
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+
 
 //Greedy search methods
 const int getNextOneIndexInRow(int* graph, const int nodeCount, const int row, int* col);
