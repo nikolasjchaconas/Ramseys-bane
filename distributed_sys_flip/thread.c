@@ -67,9 +67,7 @@ void * ThreadSolve(void *arg) {
 				printf("Thread %d switching to search for %d\n", arguments->thread_id, counter_number+1);
 				break;
 			}
-			index = getRandomIndex(counter_number);
-
-			matrix[index] ^= 1;
+			
 			cliques = CliqueCount(matrix, counter_number);
 
 			if(cliques == 0) {
@@ -95,7 +93,7 @@ void * ThreadSolve(void *arg) {
 				}
 				break;
 			} else {
-				if(attempts < 10*counter_number){
+				if(attempts < 10){
 					bestCount = randomGraphExplore(matrix, counter_number, bestCount);
 				}
 				else{
