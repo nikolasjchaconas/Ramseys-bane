@@ -106,7 +106,7 @@ int CliqueCount(int *g,int gsize)
 					   (g[i*gsize+j] == g[p*gsize+r]) &&
 					   (g[i*gsize+j] == g[q*gsize+r])) { 
 							count++;
-							return count;
+							//return count;
 						}
 					   }
 						}

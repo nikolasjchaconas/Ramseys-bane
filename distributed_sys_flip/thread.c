@@ -32,7 +32,6 @@ void * ThreadSolve(void *arg) {
 	client_struct *client_info;
 	int shift = 0;
 	int attempts = 0; 
-	int* bestGraph;
 	int bestCount = 10000000;
 
 	//useful for logging purposes
@@ -41,7 +40,6 @@ void * ThreadSolve(void *arg) {
 	client_info = (client_struct*)malloc(sizeof(client_struct));
 	createClient(client_info);
 	matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
-	bestGraph = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 	old_matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 
 	srand(time(NULL));
@@ -51,12 +49,8 @@ void * ThreadSolve(void *arg) {
 		matrix_size = counter_number * counter_number;
 		bzero(matrix, LARGEST_MATRIX_SIZE * sizeof(int));
 
-
 		initialize_50_50(matrix, counter_number);
 		bestCount = FindCliqueCount(matrix,counter_number);
-		for(i = 0; i < counter_number*counter_number; i++){
-			bestGraph[i] = matrix[i];
-		}
 		
 
 		while(1) {
@@ -101,9 +95,15 @@ void * ThreadSolve(void *arg) {
 				}
 				break;
 			} else {
-				
-				systematic_50_50_flip(matrix,counter_number,matrix_size, &attempts, bestGraph, &bestCount);	
-
+				if(attempts < 10*counter_number){
+					bestCount = randomGraphExplore(matrix, counter_number, bestCount);
+				}
+				else{
+					printf("Greedy search starts at new graph.\n");
+					bestCount = greedyGraphPermute(matrix, counter_number, bestCount);		
+				}
+				attempts++;
+				printf("Attempt is: %d\n", attempts);	
 
 			}
 		}

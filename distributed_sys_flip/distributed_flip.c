@@ -5,6 +5,7 @@
 //4 threads is optimal
 #define NUM_THREADS 4
 
+
 void initialize_50_50(int *matrix, int counter_number) {
 	int edgesToPlace = (counter_number*(counter_number-1))/4;
 	int rowToPlace = 0;

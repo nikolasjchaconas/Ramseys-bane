@@ -12,6 +12,7 @@ extern int WRITE_TO_FILE;
 #include <pthread.h>
 #include "clique-count.h"
 #include "client_protocol/client.h"
+#include "greedyGraphPermute.h"
 
 void setThreads(int threading_type);
 void initialize_50_50(int *matrix, int counter_number);
