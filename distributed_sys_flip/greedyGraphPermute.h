@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "clique-count.h"
 
 
 //Greedy search methods
