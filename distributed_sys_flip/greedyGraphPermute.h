@@ -1,8 +1,7 @@
+#ifndef GREEDYGRAPHPERMUTE_H
+#define GREEDYGRAPHPERMUTE_H
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "clique-count.h"
-
+#include "matrix.h"
 
 //Greedy search methods
 const int getNextOneIndexInRow(int* graph, const int nodeCount, const int row, int* col);
@@ -17,6 +16,17 @@ void switchEdges(int* graph, const int index1, const int index0);
 
 const int greedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index);
 
+// void *threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index);
+
+struct params {
+    int* graph; 
+    int nodeCount; 
+    int cliqueCount; 
+    int index;
+};
+
+void *threadedGreedyIndexPermute(void* args);
+
 const int greedyRowPermute(int* graph, const int nodeCount, const int cliqueCount, const int row);
 
 //Main algorithm
@@ -29,3 +39,4 @@ void randomGraphPermute(int* graph, const int nodeCount, const int permuteFactor
 void copyGraph(int* graph, int* copy, const int nodeCount);
 
 const int randomGraphExplore(int* graph, const int nodeCount, const int cliqueCount);
+#endif

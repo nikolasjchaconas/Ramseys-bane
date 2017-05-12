@@ -87,7 +87,7 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 		return -1;
 	}
 	strncpy(buffer, clique_index, row_index - clique_index);
-	client_info->coordinator_return->row_index = atoi(buffer);
+	client_info->coordinator_return->index = atoi(buffer);
 	bzero(buffer, 1024);
 
 	// if my current counter number is less than the one the coordinator has

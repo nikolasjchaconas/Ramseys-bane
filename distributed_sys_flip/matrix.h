@@ -15,6 +15,6 @@ int getRandomIndex(int width);
 
 void copyMatrix(int *smaller, int smaller_width, int *larger, int larger_width);
 
-void writeToFile(FILE *fp, int *matrix, int counter_number, argStruct *arguments);
+//void writeToFile(FILE *fp, int *matrix, int counter_number, argStruct *arguments);
 
 #endif

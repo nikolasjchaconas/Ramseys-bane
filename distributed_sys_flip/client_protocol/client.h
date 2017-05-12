@@ -20,7 +20,7 @@ typedef struct _coordinator_struct {
 	int *out_matrix;
 	int counter_number;
 	int clique_count;
-	int row_index;
+	int index;
 } coordinator_struct;
 
 typedef struct _client_struct {

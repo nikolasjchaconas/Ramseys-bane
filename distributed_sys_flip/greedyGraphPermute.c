@@ -1,4 +1,8 @@
 #include "greedyGraphPermute.h"
+#include <pthread.h>
+
+extern int bestCliqueCount;
+extern pthread_rwlock_t bestCliqueCountMutex; 
 
 const int getNextOneIndexInRow(int* graph, const int nodeCount, const int row, int* col){
 	if(nodeCount > 0 && row >= 0 && row < nodeCount && *col >= 0 && *col < nodeCount){
@@ -93,6 +97,7 @@ const int greedyIndexPermute(int* graph, const int nodeCount, const int cliqueCo
 
 			col++;
 			nextZeroIndex = (row*nodeCount)+col;
+
 		}
 	}
 	else{
@@ -100,6 +105,123 @@ const int greedyIndexPermute(int* graph, const int nodeCount, const int cliqueCo
 	}
 
 	return cliqueCount;
+}
+
+// void *threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index, void *threadid){
+
+// 	if(graph[index] == 1 && nodeCount > 0 && cliqueCount >= 0 && index >= 0 && index < nodeCount*nodeCount){
+
+// 		const int adjMatrixSize = nodeCount*nodeCount;
+// 		int graphCopy[adjMatrixSize];
+// 		bzero(graphCopy, adjMatrixSize*sizeof(int));
+
+// 		pthread_mutex_lock(&bestCliqueCountMutex);
+// 		copyGraph(graph, graphCopy, nodeCount);
+// 		pthread_mutex_unlock(&bestCliqueCountMutex);
+
+// 		const int row = floor(index / nodeCount);
+// 		const int lastZeroIndex = getLastZeroIndexInRow(graphCopy, nodeCount, row);
+
+// 		//Start with a valid value for the col
+// 		int col = row + 1;
+// 		int nextZeroIndex = (row * nodeCount) + col;
+// 		while(nextZeroIndex < lastZeroIndex){
+// 			pthread_mutex_lock(&bestCliqueCountMutex);
+// 			if(bestCliqueCount < cliqueCount){
+// 				printf("Another thread found a better graph. Thread is exiting!\n");
+// 				pthread_mutex_unlock(&bestCliqueCountMutex);
+// 				pthread_exit(NULL);
+// 			}
+// 			pthread_mutex_unlock(&bestCliqueCountMutex);
+
+// 			nextZeroIndex = getNextZeroIndexInRow(graphCopy, nodeCount, row, &col);
+// 			switchEdges(graphCopy, index, nextZeroIndex);
+// 			const int newCliqueCount = CliqueCount(graphCopy, nodeCount);
+// 			printf("Checking out: %d\n",newCliqueCount);
+			
+// 			if(newCliqueCount < cliqueCount){
+// 				printf("New bestCount is: %d\n", newCliqueCount);
+// 				//Mutex and change the original graph
+// 				pthread_mutex_lock(&bestCliqueCountMutex);
+// 			   	bestCliqueCount = cliqueCount;
+// 			   	copyGraph(graphCopy, graph, nodeCount);
+// 			    pthread_mutex_unlock(&bestCliqueCountMutex);
+// 				//Mutex over
+// 				pthread_exit(NULL);
+// 			}
+// 			switchEdges(graphCopy, index, nextZeroIndex);
+// 			col++;
+// 			nextZeroIndex = (row*nodeCount)+col;
+
+// 		}
+// 	}
+// 	else{
+// 		printf("Error in greedyIndexPermute. Got the index: %d. It is pointing to the value: %d in the graph. The inputs were nodeCount: %d, cliqueCount: %d. PermuteEdge will not be performed.\n", index, graph[index], nodeCount, cliqueCount);
+// 	}
+
+// 	pthread_exit(NULL);
+// }
+
+void *threadedGreedyIndexPermute(void* args){
+
+	struct params *readParams = args;
+
+	pthread_rwlock_rdlock(&bestCliqueCountMutex);
+	int* graph = readParams->graph;
+	pthread_rwlock_unlock(&bestCliqueCountMutex);
+
+	int nodeCount = readParams->nodeCount;
+   	int cliqueCount = readParams->cliqueCount; 
+    int index = readParams->index;
+
+	if(graph[index] == 1 && nodeCount > 0 && cliqueCount >= 0 && index >= 0 && index < nodeCount*nodeCount){
+
+		const int adjMatrixSize = nodeCount*nodeCount;
+		int graphCopy[adjMatrixSize];
+		bzero(graphCopy, adjMatrixSize*sizeof(int));
+
+		pthread_rwlock_rdlock(&bestCliqueCountMutex);
+		copyGraph(graph, graphCopy, nodeCount);
+		pthread_rwlock_unlock(&bestCliqueCountMutex);
+
+		const int row = floor(index / nodeCount);
+		const int lastZeroIndex = getLastZeroIndexInRow(graphCopy, nodeCount, row);
+
+		//Start with a valid value for the col
+		int col = row + 1;
+		int nextZeroIndex = (row * nodeCount) + col;
+		while(nextZeroIndex < lastZeroIndex){
+			pthread_rwlock_rdlock(&bestCliqueCountMutex);
+			if(bestCliqueCount < cliqueCount){
+				printf("Another thread found a better graph. Thread is exiting!\n");
+				pthread_rwlock_unlock(&bestCliqueCountMutex);
+				break;
+			}
+			pthread_rwlock_unlock(&bestCliqueCountMutex);
+
+			nextZeroIndex = getNextZeroIndexInRow(graphCopy, nodeCount, row, &col);
+			switchEdges(graphCopy, index, nextZeroIndex);
+			const int newCliqueCount = CliqueCount(graphCopy, nodeCount);
+			printf("Checking out: %d\n",newCliqueCount);
+			
+			if(newCliqueCount < cliqueCount){
+				printf("New bestCount is: %d\n", newCliqueCount);
+				pthread_rwlock_wrlock(&bestCliqueCountMutex);
+			   	bestCliqueCount = newCliqueCount;
+			   	copyGraph(graphCopy, graph, nodeCount);
+			    pthread_rwlock_unlock(&bestCliqueCountMutex);
+				break;
+			}
+			switchEdges(graphCopy, index, nextZeroIndex);
+			col++;
+			nextZeroIndex = (row*nodeCount)+col;
+
+		}
+	}
+	else{
+		printf("Error in greedyIndexPermute. Got the index: %d. It is pointing to the value: %d in the graph. The inputs were nodeCount: %d, cliqueCount: %d. PermuteEdge will not be performed.\n", index, graph[index], nodeCount, cliqueCount);
+	}
+	return NULL;
 }
 
 const int greedyRowPermute(int* graph, const int nodeCount, const int cliqueCount, const int row){
@@ -147,8 +269,7 @@ const int greedyGraphPermute(int* graph, const int nodeCount, const int cliqueCo
 
 void randomGraphPermute(int* graph, const int nodeCount, const int permuteFactor){
 	if(nodeCount > 0 && permuteFactor > 0){
-		int i;
-		for(i = 0; i < permuteFactor; i++){
+		for(int i = 0; i < permuteFactor; i++){
 			int randRow = rand() % (nodeCount-2);
 			int randCol = (rand() %  (nodeCount-randRow-1))+randRow+1;
 			int index1 = (randRow*nodeCount)+randCol;
@@ -185,7 +306,7 @@ const int randomGraphExplore(int* graph, const int nodeCount, const int cliqueCo
 		const int matrixSize = nodeCount*nodeCount;
 		int graphCopy[matrixSize];
 		copyGraph(graph, graphCopy, nodeCount);
-		randomGraphPermute(graphCopy, nodeCount, 0.2*matrixSize);
+		randomGraphPermute(graphCopy, nodeCount, 2000);
 		int newCliqueCount = CliqueCount(graphCopy, nodeCount);
 		printf("currentCount is: %d\n",newCliqueCount);
 		if(newCliqueCount < cliqueCount){
