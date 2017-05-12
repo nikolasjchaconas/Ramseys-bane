@@ -93,7 +93,7 @@ void *findCounterExample(void* args){
 
 	graph = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 
-	for(; nodeCount < 1000; nodeCount++) {
+	for(; nodeCount < 1000; ) {
 		bzero(graph, LARGEST_MATRIX_SIZE);
 		initialize_50_50(graph, nodeCount);
 		cliqueCount = CliqueCount(graph, nodeCount);
@@ -101,7 +101,7 @@ void *findCounterExample(void* args){
 			cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);	
 		}
 
-		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, -1, graph, client_info);
+		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 1, graph, client_info);
 
 		if(coordinator_node_count >= nodeCount) {
 			printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", nodeCount, coordinator_node_count + 1);
@@ -109,8 +109,11 @@ void *findCounterExample(void* args){
 			nodeCount = coordinator_return->counter_number;
 			cliqueCount = coordinator_return->clique_count;
 			index = coordinator_return->index;	
+			if(index == -1) {
+				//we've exhausted indices
+				continue;
+			}
 		} else {
-			nodeCount--;
 			continue;
 		}
 		
@@ -120,20 +123,19 @@ void *findCounterExample(void* args){
 		if(bestCliqueCount == 0) {
 			printf("Found Counter Example for %d!\n", nodeCount);
 
-			received_number = sendCounterExampleToCoordinator(nodeCount, 0, -1, graph, client_info);
+			received_number = sendCounterExampleToCoordinator(nodeCount, 0, 0, graph, client_info);
 
 			if(received_number > nodeCount) {
 				nodeCount = received_number - 1;
 			}
 		} else {
 			if(bestCliqueCount > cliqueCount) {
-				received_number = sendCounterExampleToCoordinator(nodeCount, 0, -1, graph, client_info);
+				received_number = sendCounterExampleToCoordinator(nodeCount, bestCliqueCount, 0, graph, client_info);
 				if(received_number > nodeCount) {
 					nodeCount = received_number;
 				}
 			}
 			pthread_rwlock_unlock(&bestCliqueCountMutex);
-			nodeCount--;
 			continue;
 		}
 		pthread_rwlock_unlock(&bestCliqueCountMutex);
