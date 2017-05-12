@@ -8,8 +8,6 @@
 #define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
 
-#define MAX_PAYLOAD_SIZE (1024 * 1024)
-
 double poll_interval_seconds = 180;
 
 int getRandomNumber(int bound) {
@@ -32,56 +30,76 @@ void setPollInterval(double interval, client_struct *client_info) {
 	client_info->last_poll_time = -interval;
 }
 
-int readCoordinatorMessage(int *out_matrix, int counter_number, client_struct *client_info) {
+int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 	long bytes_read;
-	int coordinator_number;
-	char *index;
+	char *counter_index;
+	char *clique_index;
+	char *row_index;
 	char buffer[1024];
 	int i;
 	int matrix_size;
 	int digits;
 	int size;
+	int *out_matrix;
+	int num;
+
+	num = 1;
+	bytes_read = 0;
+	out_matrix = client_info->coordinator_return->out_matrix;
 
 	bzero(buffer, 1024);
+	bzero(client_info->recvline, LARGEST_MATRIX_SIZE * sizeof(char));
 
-	bzero(client_info->recvline, MAX_PAYLOAD_SIZE * sizeof(char));
+	while(num > 0) {
+		num = read(client_info->sockfd, client_info->recvline + bytes_read, LARGEST_MATRIX_SIZE - bytes_read);
+		bytes_read += num;
+	}
 
-	bytes_read = read(client_info->sockfd, client_info->recvline, MAX_PAYLOAD_SIZE);
-
-	if(bytes_read == 0) {
+	if(bytes_read <= 0) {
 		printf("Connection was lost\n");
 		return -1;
 	}
 
-	index = strchr(client_info->recvline, ':');
-
-	if(!index) {
+	//coordinator_number
+	counter_index = strchr(client_info->recvline, ':');
+	if(!counter_index) {
 		printf("Sujaya you forgot the colon character!!!\n");
 		return -1;
 	}
+	strncpy(buffer, client_info->recvline, counter_index - client_info->recvline);
+	client_info->coordinator_return->counter_number = atoi(buffer);
+	bzero(buffer, 1024);
 
-	
-
-	strncpy(buffer, client_info->recvline, index - client_info->recvline);
-
-	coordinator_number = atoi(buffer);
-	digits = numDigits(coordinator_number);
-	size = coordinator_number * coordinator_number + digits + 1;
-
-	while(bytes_read < size) {
-		bytes_read += read(client_info->sockfd, client_info->recvline + bytes_read, MAX_PAYLOAD_SIZE - bytes_read);
+	//coordinator_clique
+	clique_index = strchr(counter_index, ':');
+	if(!clique_index) {
+		printf("Sujaya you forgot the colon character!!!\n");
+		return -1;
 	}
+	strncpy(buffer, counter_index, clique_index - counter_index);
+	client_info->coordinator_return->clique_count = atoi(buffer);
+	bzero(buffer, 1024);
+
+	//coordinator_index
+	row_index = strchr(clique_index, ':');
+	if(!row_index) {
+		printf("Sujaya you forgot the colon character!!!\n");
+		return -1;
+	}
+	strncpy(buffer, clique_index, row_index - clique_index);
+	client_info->coordinator_return->row_index = atoi(buffer);
+	bzero(buffer, 1024);
 
 	// if my current counter number is less than the one the coordinator has
-	if(counter_number < coordinator_number && out_matrix) {
-		matrix_size = coordinator_number * coordinator_number;
+	if(counter_number < client_info->coordinator_return->counter_number && out_matrix) {
+		matrix_size = client_info->coordinator_return->counter_number * client_info->coordinator_return->counter_number;
 		bzero(out_matrix, LARGEST_MATRIX_SIZE * sizeof(int));
 		for(i = 0; i < matrix_size; i++) {
 			out_matrix[i] = *(client_info->recvline + digits + i + 1) - '0';
 		}
 	}
 
-	return coordinator_number;
+	return client_info->coordinator_return->counter_number;
 }
 
 int numDigits(int num) {
@@ -98,7 +116,7 @@ int numDigits(int num) {
 	return digits;
 }
 
-int pollCoordinator(int* out_matrix, client_struct *client_info) {
+int pollCoordinator(int counter_number, int clique_count, int index, int* matrix, client_struct *client_info) {
 	double time_waited;
 
 	time_waited = getTime() - client_info->last_poll_time;
@@ -106,19 +124,23 @@ int pollCoordinator(int* out_matrix, client_struct *client_info) {
 	// printf("time waited is %f and interval is %f and last time is %f\n", time_waited, poll_interval_seconds, last_poll_time);
 	if(time_waited > poll_interval_seconds) {
 		printf("Polling\n");
-		return sendCounterExampleToCoordinator(NULL, 0, out_matrix, client_info);
+		return sendCounterExampleToCoordinator(counter_number, clique_count, index, matrix, client_info);
 	} else {
 		return 0;
 	}
 }
 
-int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix, client_struct *client_info) {
+int sendCounterExampleToCoordinator(int counter_number, int clique_count, int index, int* matrix, client_struct *client_info) {
 	int error;
 	int len;
 	int ret;
 	int size;
 	int i;
-	int digits;
+	int counter_digits;
+	int clique_digits;
+	int index_digits;
+	int offset;
+
 	double time_waited;
 
 
@@ -131,16 +153,26 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 		return -1;
 	}
 
-	digits = numDigits(counter_number);
+	counter_digits = numDigits(counter_number);
+	clique_digits = numDigits(clique_count);
+	index_digits = numDigits(index);
+	offset = counter_digits + clique_digits + index_digits + 3;
 
 	// matrix size + digits in counter example number + colon
-	size = (counter_number * counter_number) + digits + 1;
-
-	bzero(client_info->sendline, MAX_PAYLOAD_SIZE * sizeof(char));
+	size = (counter_number * counter_number) + offset;
+	bzero(client_info->sendline, LARGEST_MATRIX_SIZE * sizeof(char));
 	
+	// print counter number
 	sprintf(client_info->sendline, "%d:", counter_number);
-	for(i = digits + 1; i < size; i++) {
-		sprintf(client_info->sendline + i, "%d", matrix[i - digits - 1]);
+	// print clique count
+	sprintf(client_info->sendline + counter_digits + 1, "%d:", clique_count);
+	// print index
+	sprintf(client_info->sendline + clique_digits + 1, "%d:", index);
+
+
+	// print matrix
+	for(i = offset; i < size; i++) {
+		sprintf(client_info->sendline + i, "%d", matrix[i - offset]);
 	}
 
 	// form the message and send it
@@ -152,7 +184,7 @@ int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_ma
 	// printf("wrote out %d bytes to server: %s\n", ret, buffer);
 
 	//out_matrix will contain currrent counter example
-	ret = readCoordinatorMessage(out_matrix, counter_number, client_info);
+	ret = readCoordinatorMessage(counter_number, client_info);
 	printf("Read from the Coordinator\n");
 
 	if(ret < 0) {
@@ -248,11 +280,12 @@ int connectToCoordinator(client_struct *client_info) {
 
 void createClient(client_struct *client_info) {
 	printf("Creating Client...\n\n");
+	client_info->coordinator_return->out_matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 	client_info->known_coordinator = 0;
 	client_info->last_poll_time = 0;
 	client_info->num_coordinators = NUM_COORDINATORS;
-	client_info->recvline = (char*)malloc(sizeof(char) * MAX_PAYLOAD_SIZE);
-	client_info->sendline = (char*)malloc(sizeof(char) * MAX_PAYLOAD_SIZE);
+	client_info->recvline = (char*)malloc(sizeof(char) * LARGEST_MATRIX_SIZE);
+	client_info->sendline = (char*)malloc(sizeof(char) * LARGEST_MATRIX_SIZE);
 	client_info->coordinator_ips = (char **)malloc(sizeof(char*) * client_info->num_coordinators);
 	client_info->coordinator_ips[0] = (char *)malloc(strlen(COORDINATOR1_IP) + 1);
 	client_info->coordinator_ips[1] = (char *)malloc(strlen(COORDINATOR2_IP) + 1);

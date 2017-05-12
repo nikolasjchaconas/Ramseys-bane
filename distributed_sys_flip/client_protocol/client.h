@@ -14,7 +14,14 @@
 #include <string.h>
 #include <fcntl.h>
 
-#define LARGEST_MATRIX_SIZE 1000*1000
+#define LARGEST_MATRIX_SIZE 1024*1024
+
+typedef struct _coordinator_struct {
+	int *out_matrix;
+	int counter_number;
+	int clique_count;
+	int row_index;
+} coordinator_struct;
 
 typedef struct _client_struct {
 	int known_coordinator;
@@ -26,15 +33,16 @@ typedef struct _client_struct {
 	char *recvline;
 	char *sendline;
 	double last_poll_time;
+	coordinator_struct *coordinator_return;
 } client_struct;
 
 
 int getRandomNumber(int bound);
 
-int readCoordinatorMessage(int *out_matrix, int counter_number, client_struct *client_info);
+int readCoordinatorMessage(int counter_number, client_struct *client_info);
 int connectToCoordinator();
-int sendCounterExampleToCoordinator(int* matrix, int counter_number, int* out_matrix, client_struct *client_info);
-int pollCoordinator(int* out_matrix, client_struct *client_info);
+int sendCounterExampleToCoordinator(int counter_number, int clique_count, int index, int* matrix, client_struct *client_info);
+int pollCoordinator(int counter_number, int clique_count, int index, int* matrix, client_struct *client_info);
 int numDigits(int num);
 void createClient();
 double getTime();
