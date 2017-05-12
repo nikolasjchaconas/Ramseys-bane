@@ -162,18 +162,7 @@ const int greedyIndexPermute(int* graph, const int nodeCount, const int cliqueCo
 // 	pthread_exit(NULL);
 // }
 
-void *threadedGreedyIndexPermute(void* args){
-
-	struct params *readParams = args;
-
-	pthread_rwlock_rdlock(&bestCliqueCountMutex);
-	int* graph = readParams->graph;
-	pthread_rwlock_unlock(&bestCliqueCountMutex);
-
-	int nodeCount = readParams->nodeCount;
-   	int cliqueCount = readParams->cliqueCount; 
-    int index = readParams->index;
-
+void *threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index){
 	if(graph[index] == 1 && nodeCount > 0 && cliqueCount >= 0 && index >= 0 && index < nodeCount*nodeCount){
 
 		const int adjMatrixSize = nodeCount*nodeCount;

@@ -1,172 +1,180 @@
 #include <stdio.h>
 #include <math.h>
 #include <pthread.h>
-#include "greedyGraphPermute.h"
+#include "distributed_flip.h"
 #include <stdlib.h>
 #include "clique-count.h"
 #include "client_protocol/client.h"
 #include "matrix.h"
-#define NUM_THREADS	100
+#define NUM_THREADS	2
 
 int bestCliqueCount;
 pthread_rwlock_t bestCliqueCountMutex;
 client_struct *client_info;
-int* old_matrix;
 char buffer[1024];
 
 void initRandomGraph(int* graph, const int nodeCount){
-  const int adjMatrixSize = nodeCount*nodeCount;
-  bzero(graph, adjMatrixSize*sizeof(int));
-  int edgesToPlaceInRow = ceil((nodeCount-1)/2);
-  int edgesPlacedInRow = 0;
-  int i;
-  int row;
+	const int adjMatrixSize = nodeCount*nodeCount;
+	bzero(graph, adjMatrixSize*sizeof(int));
+	int edgesToPlaceInRow = ceil((nodeCount-1)/2);
+	int edgesPlacedInRow = 0;
+	int i;
+	int row;
 
-  int edgesInPreviousRow = 0;
+	int edgesInPreviousRow = 0;
 
-  for(i = 0; i < nodeCount-1; i++){
-    int edgeValue = 1;
-    while(1){
-      int randRow = i;
-      int randCol = (rand() % (nodeCount-randRow-1))+randRow+1;
-      edgeValue = graph[(randRow*nodeCount)+randCol];
-      if(edgeValue==0){
-        graph[(randRow*nodeCount)+randCol] = 1;
-        edgesPlacedInRow++;
-        if(edgesToPlaceInRow == edgesPlacedInRow){
-          edgesPlacedInRow = 0;
-          edgesToPlaceInRow = ceil((nodeCount - 1 - i)/2);
-          break;
-        }
-      }
-    }
-  }
+	for(i = 0; i < nodeCount-1; i++){
+		int edgeValue = 1;
+		while(1){
+			int randRow = i;
+			int randCol = (rand() % (nodeCount-randRow-1))+randRow+1;
+			edgeValue = graph[(randRow*nodeCount)+randCol];
+			if(edgeValue==0){
+			graph[(randRow*nodeCount)+randCol] = 1;
+			edgesPlacedInRow++;
+			if(edgesToPlaceInRow == edgesPlacedInRow){
+				edgesPlacedInRow = 0;
+				edgesToPlaceInRow = ceil((nodeCount - 1 - i)/2);
+				break;
+			}
+			}
+		}
+	}
 }
 
 void printGraph(int *graph, const int nodeCount){
-  int adjMatrixSize;
-  int i;
-  int j;
-  int value;
+	int adjMatrixSize;
+	int i;
+	int j;
+	int value;
 
-  printf("%d 0", nodeCount);
+	printf("%d 0", nodeCount);
 
-  adjMatrixSize = nodeCount * nodeCount;
-  
-  for(i = 0; i < nodeCount; i++) {
-    printf("\n");
-    for(j = 0; j < nodeCount; j++) {
-      value = get(i, j, graph, nodeCount);
-      printf("%d ", value);
-    }
-  }
+	adjMatrixSize = nodeCount * nodeCount;
+	
+	for(i = 0; i < nodeCount; i++) {
+	printf("\n");
+	for(j = 0; j < nodeCount; j++) {
+		value = get(i, j, graph, nodeCount);
+		printf("%d ", value);
+	}
+	}
 }
 
 void initIndexQueue(int* indexQueue, int* graph, const int indexQueueSize, const int adjMatrixSize){
-  bzero(indexQueue, indexQueueSize*sizeof(int)); 
-  int index;
-  int indexQueueNr = 0;
-  for(index = 0; index < adjMatrixSize; index++){
-    if(graph[index] == 1){
-      indexQueue[indexQueueNr] = index;
-      indexQueueNr++;
-    }
-  }
+	bzero(indexQueue, indexQueueSize*sizeof(int)); 
+	int index;
+	int indexQueueNr = 0;
+	for(index = 0; index < adjMatrixSize; index++){
+	if(graph[index] == 1){
+		indexQueue[indexQueueNr] = index;
+		indexQueueNr++;
+	}
+	}
 }
 
-void findCounterExample(int nodeCount){
+void *findCounterExample(void* args){
+	int *graph;
+	int nodeCount;
+	int cliqueCount;
+	int index;
+	int rc;
+	long t;
+	int i;
+	int random_iterations;
+	int coordinator_node_count;
+	int received_number;
 
-  // int coordinatorValue = pollCoordinator(old_matrix, client_info);
-  // if(coordinatorValue >= nodeCount) {
-  //   printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", nodeCount, coordinatorValue+1);
-  //   nodeCount = coordinatorValue+1;
-  // }
 
-  const int adjMatrixSize = nodeCount*nodeCount;
-  int graph[adjMatrixSize];
-  initRandomGraph(graph, nodeCount);
-  bestCliqueCount = CliqueCount(graph, nodeCount);
+	random_iterations = 1;
+	nodeCount = 160;
+	coordinator_struct *coordinator_return;
+	coordinator_return = (coordinator_struct *)args;
 
-  int i;
-  for(i = 0; i < 100; i++){
-    bestCliqueCount = randomGraphExplore(graph, nodeCount, bestCliqueCount);
-  }
+	graph = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 
-  int indexQueueSize = ceil(adjMatrixSize/4);
-  int indexQueue[indexQueueSize];
-  int nextIndex = 0;
-  initIndexQueue(indexQueue, graph, indexQueueSize, adjMatrixSize);
+	for(; nodeCount < 1000; nodeCount++) {
+		bzero(graph, LARGEST_MATRIX_SIZE);
+		initialize_50_50(graph, nodeCount);
+		cliqueCount = CliqueCount(graph, nodeCount);
+		for(i = 0; i < random_iterations; i++) {
+			cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);	
+		}
 
-  pthread_t threads[NUM_THREADS];
-  int rc;
-  long t;
-  struct params** readParams;
-  readParams = (struct params**) malloc(NUM_THREADS * sizeof(struct params*));
-  for(i = 0; i < NUM_THREADS; i++){
-    readParams[i] = (struct params*) malloc(sizeof(struct params));
-  }
-  while(bestCliqueCount > 0){
-    for(t=0; t<NUM_THREADS; t++){
-     printf("In main: creating thread %ld\n", t);
-     readParams[t]->graph = graph;
-     readParams[t]->nodeCount = nodeCount;
-     readParams[t]->cliqueCount = bestCliqueCount;
-     readParams[t]->index = indexQueue[nextIndex = ((nextIndex+500)%nodeCount)];
+		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, -1, graph, client_info);
 
-     rc = pthread_create(&threads[t], NULL, threadedGreedyIndexPermute, readParams[t]);
-     if (rc){
-        printf("ERROR; return code from pthread_create() is %d\n", rc);
-        exit(-1);
-     }
-    }
-    for(i=0; i < NUM_THREADS; i++) {
-      int error = pthread_join(threads[i],NULL);
-      if (error != 0) {
-        fprintf(stderr, "error joining thread\n");
-      }
-    }
-  }
-  for(i = 0; i < NUM_THREADS; i++){
-    free(readParams[i]);
-  }
-  free(readParams);
+		if(coordinator_node_count >= nodeCount) {
+			printf("Someone has solved Ramsey Number %d, Switching to solve Counter Example %d\n", nodeCount, coordinator_node_count + 1);
+			copyGraph(client_info->coordinator_return->out_matrix, graph, nodeCount);
+			nodeCount = coordinator_return->counter_number;
+			cliqueCount = coordinator_return->clique_count;
+			index = coordinator_return->index;	
+		} else {
+			nodeCount--;
+			continue;
+		}
+		
+		threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index);
 
-  // if(bestCliqueCount == 0) {
-  //   printf("Found Counter Example for %d!\n", nodeCount);
+		pthread_rwlock_rdlock(&bestCliqueCountMutex);
+		if(bestCliqueCount == 0) {
+			printf("Found Counter Example for %d!\n", nodeCount);
 
-  //   int received_number = sendCounterExampleToCoordinator(graph, nodeCount, old_matrix, client_info);
-  //   FILE *fp;
-  //   if(received_number > nodeCount) {
-  //     nodeCount = received_number;
-  //   } else {
-  //     if(1) {
-  //       sprintf(buffer, "counter_examples/counter_%d.txt", nodeCount);
-  //       if( access( buffer, F_OK ) == -1 ) {
-  //         fp = fopen(buffer, "w");
-  //         writeToFile(fp, graph, nodeCount);
-  //         fclose(fp);
-  //       }
-  //     }
-  //     bzero(buffer, sizeof(buffer));
-  //   }
-  // }
+			received_number = sendCounterExampleToCoordinator(nodeCount, 0, -1, graph, client_info);
 
+			if(received_number > nodeCount) {
+				nodeCount = received_number - 1;
+			}
+		} else {
+			if(bestCliqueCount > cliqueCount) {
+				received_number = sendCounterExampleToCoordinator(nodeCount, 0, -1, graph, client_info);
+				if(received_number > nodeCount) {
+					nodeCount = received_number;
+				}
+			}
+			pthread_rwlock_unlock(&bestCliqueCountMutex);
+			nodeCount--;
+			continue;
+		}
+		pthread_rwlock_unlock(&bestCliqueCountMutex);
+
+	}
+	return NULL;
 }
 
 int main (int argc, char *argv[]){
-  srand(time(NULL));
-  old_matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
-  client_info = (client_struct*)malloc(sizeof(client_struct));
-  //createClient(client_info);
-  pthread_rwlock_init(&bestCliqueCountMutex, NULL);
-  int nodeCount;
-  int coordinatorValue = 160;//pollCoordinator(old_matrix, client_info);
+	int nodeCount;
+	int rc;
+	int t;
+	int i;
+	pthread_t threads[NUM_THREADS];
 
-  for(nodeCount = coordinatorValue+1; nodeCount < 810; nodeCount++){
-    findCounterExample(nodeCount);
-  }
+	srand(time(NULL));
+	client_info = (client_struct*)malloc(sizeof(client_struct));
+	client_info->coordinator_return = (coordinator_struct*)malloc(sizeof(coordinator_struct));
+	createClient(client_info);
 
-  /* Last thing that main() should do */
-  pthread_exit(NULL);
-  return 0;
+	pthread_rwlock_init(&bestCliqueCountMutex, NULL);
+
+	for(t=0; t<NUM_THREADS; t++){
+		// int nodeCount, int* graph, const int index
+		printf("In main: creating thread %d\n", t);
+
+		rc = pthread_create(&threads[t], NULL, findCounterExample, (void*)client_info->coordinator_return);
+		if (rc) {
+			printf("ERROR; return code from pthread_create() is %d\n", rc);
+			exit(-1);
+		}
+	}
+
+	for(i=0; i < NUM_THREADS; i++) {
+		int error = pthread_join(threads[i],NULL);
+		if (error != 0) {
+			fprintf(stderr, "error joining thread\n");
+		}
+	}
+
+	/* Last thing that main() should do */
+	pthread_exit(NULL);
+	return 0;
 }

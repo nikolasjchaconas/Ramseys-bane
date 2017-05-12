@@ -74,7 +74,7 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 		// The best graph after a certain number of attempts is used as the basis for a search.
 		flip_50_50(matrix, counter_number, matrix_size);
 
-		int currentCount = FindCliqueCount(matrix, counter_number);
+		int currentCount = CliqueCount(matrix, counter_number);
 		printf("currentCount is: %d\n",currentCount);
 		if(currentCount < *bestCount){
 			*bestCount = currentCount;
@@ -124,7 +124,7 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 				matrix[index0] = 1;
 
 				//Check the new matrices cliques count
-				int cliqueInCopy = FindCliqueCount(matrix, counter_number);
+				int cliqueInCopy = CliqueCount(matrix, counter_number);
 				printf("Checking out: %d\n",cliqueInCopy);
 				if(cliqueInCopy < *bestCount){
 					*bestCount = cliqueInCopy;
@@ -160,68 +160,68 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 	}
 }
 
-void setThreads(int threading_type) {
-	pthread_mutex_t file_lock;
-	int found;
-	int index;
-	int bound;
-	int clique_count;
-	pthread_t *thread_array;
-	int error;
-	int thread_id;
-	int i;
-	argStruct **arguments;
-	argStruct *argument;
+// void setThreads(int threading_type) {
+// 	pthread_mutex_t file_lock;
+// 	int found;
+// 	int index;
+// 	int bound;
+// 	int clique_count;
+// 	pthread_t *thread_array;
+// 	int error;
+// 	int thread_id;
+// 	int i;
+// 	argStruct **arguments;
+// 	argStruct *argument;
 
-	pthread_mutex_init(&file_lock, NULL);
-	found = 0;
+// 	pthread_mutex_init(&file_lock, NULL);
+// 	found = 0;
 
-	printf("---------------------------------------------\n");
-	printf("\nBeginning Ramsey Solver.\n");
-	printf("\nOptions Chosen:\n");
+// 	printf("---------------------------------------------\n");
+// 	printf("\nBeginning Ramsey Solver.\n");
+// 	printf("\nOptions Chosen:\n");
 	
-	switch(threading_type) {
-		case SINGLE_THREAD:
-			printf("THREADING: Single Threaded\n\n");
-			printf("---------------------------------------------\n\n");
-			argument = (argStruct *)malloc(sizeof(argStruct));
-			argument->thread_id = 0;
-			argument->found = &found;
-			argument->file_lock = &file_lock;
-			ThreadSolve((void*)argument);
-			break;
+// 	switch(threading_type) {
+// 		case SINGLE_THREAD:
+// 			printf("THREADING: Single Threaded\n\n");
+// 			printf("---------------------------------------------\n\n");
+// 			argument = (argStruct *)malloc(sizeof(argStruct));
+// 			argument->thread_id = 0;
+// 			argument->found = &found;
+// 			argument->file_lock = &file_lock;
+// 			ThreadSolve((void*)argument);
+// 			break;
 
-		case MULTI_THREAD:
-			printf("THREADING: Multi Threaded\n\n");
-			printf("---------------------------------------------\n\n");
-			thread_array = (pthread_t *)malloc(sizeof(pthread_t) * NUM_THREADS);
-			arguments = (argStruct **)malloc(sizeof(argStruct*) * NUM_THREADS);
+// 		case MULTI_THREAD:
+// 			printf("THREADING: Multi Threaded\n\n");
+// 			printf("---------------------------------------------\n\n");
+// 			thread_array = (pthread_t *)malloc(sizeof(pthread_t) * NUM_THREADS);
+// 			arguments = (argStruct **)malloc(sizeof(argStruct*) * NUM_THREADS);
 
-			for(thread_id = 0; thread_id < NUM_THREADS; thread_id++) {
-				arguments[thread_id] = (argStruct *)malloc(sizeof(argStruct));
-				arguments[thread_id]->thread_id = thread_id;
-				arguments[thread_id]->found = &found;
-				arguments[thread_id]->file_lock = &file_lock;
-				error = pthread_create(&(thread_array[thread_id]), NULL, ThreadSolve, (void *)arguments[thread_id]);
-				if(error) {
-					fprintf(stderr, "error creating thread\n");
-					exit(1);
-				}
-			}
+// 			for(thread_id = 0; thread_id < NUM_THREADS; thread_id++) {
+// 				arguments[thread_id] = (argStruct *)malloc(sizeof(argStruct));
+// 				arguments[thread_id]->thread_id = thread_id;
+// 				arguments[thread_id]->found = &found;
+// 				arguments[thread_id]->file_lock = &file_lock;
+// 				error = pthread_create(&(thread_array[thread_id]), NULL, ThreadSolve, (void *)arguments[thread_id]);
+// 				if(error) {
+// 					fprintf(stderr, "error creating thread\n");
+// 					exit(1);
+// 				}
+// 			}
 
-			//join threads
-			for(i=0; i < NUM_THREADS; i++) {
-				error = pthread_join(thread_array[i],NULL);
-				if (error != 0) {
-					fprintf(stderr, "error joining thread\n");
-				}
+// 			//join threads
+// 			for(i=0; i < NUM_THREADS; i++) {
+// 				error = pthread_join(thread_array[i],NULL);
+// 				if (error != 0) {
+// 					fprintf(stderr, "error joining thread\n");
+// 				}
 
-			}
-			break;
+// 			}
+// 			break;
 
-		default:
-			printf("You did not specify a valid threading type.\n");
-			printf("Exiting...\n");
-			exit(1);
-	}
-}
+// 		default:
+// 			printf("You did not specify a valid threading type.\n");
+// 			printf("Exiting...\n");
+// 			exit(1);
+// 	}
+// }
