@@ -70,7 +70,7 @@ class RamseyServer():
 
         get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE counterNum=(SELECT MAX(counterNum) from ' + COUNTER_EX_TABLE + ')'
         rows = self.db.get(get_statement)
-	if rows:
+        if rows:
             row = rows[0]
             self.setCurrCounterNum(row[0])
             self.setBestCliqueCount(row[1])
