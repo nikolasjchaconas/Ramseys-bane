@@ -61,7 +61,7 @@ class RamseyServer():
         self.db = DBStore(DB_NAME, DB_USER, db_node)
 
         create_table = 'CREATE TABLE IF NOT EXISTS '+ COUNTER_EX_TABLE 
-        create_table += ' (counterNum INT PRIMARY KEY, cliqueCount INT, index INT, graph VARCHAR)'
+        create_table += ' (counterNum INT PRIMARY KEY, cliqueCount INT, currIndex INT, bestGraph VARCHAR)'
         self.db.create(create_table)
 
 
@@ -70,13 +70,14 @@ class RamseyServer():
 
         get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE counterNum=(SELECT MAX(counterNum) from ' + COUNTER_EX_TABLE + ')'
         rows = self.db.get(get_statement)
-        row = rows[0]
-        self.setCurrCounterNum(row[0])
-        self.setBestCliqueCount(row[1])
-        self.setIndexQueue(row[2])
-        self.setBestGraph(row[3])
+	if rows:
+            row = rows[0]
+            self.setCurrCounterNum(row[0])
+            self.setBestCliqueCount(row[1])
+            self.setIndexQueue(row[2])
+            self.setBestGraph(row[3])
 
-        self.logger.debug('Loaded the best counter example number from db: %d' %(row[0]))
+            self.logger.debug('Loaded the best counter example number from db: %d' %(row[0]))
 
 
     def logFormatter(self, svrInfo):
@@ -230,7 +231,7 @@ class RamseyServer():
             for j in range(start, largerWidth):
                 value = graph[i * smallerWidth + j]
                 newGraph[i * largerWidth + j] = str(value)
-            start++
+            start+=1
         
         newGraph = ',',join(newGraph)
         self.setBestGraph(newGraph)
