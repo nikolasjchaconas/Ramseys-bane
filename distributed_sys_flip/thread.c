@@ -86,7 +86,7 @@ void *findCounterExample(void* args){
 	int received_number;
 
 
-	random_iterations = 1;
+	random_iterations = 10;
 	nodeCount = 160;
 	coordinator_struct *coordinator_return;
 	coordinator_return = (coordinator_struct *)args;

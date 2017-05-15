@@ -5,6 +5,7 @@
 #define COORDINATOR3_IP "169.231.235.86"
 #define COORDINATOR4_IP "169.231.235.115"
 #define COORDINATOR5_IP "169.231.235.97"
+
 #define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
 
@@ -152,7 +153,7 @@ int sendCounterExampleToCoordinator(int counter_number, int clique_count, int in
 		close(client_info->sockfd);
 		return -1;
 	}
-
+	printf("Sending to Coordinator: counter num: %d, clique count: %d, index: %d\n", counter_number, clique_count, index);
 	counter_digits = numDigits(counter_number);
 	clique_digits = numDigits(clique_count);
 	index_digits = numDigits(index);
@@ -165,21 +166,23 @@ int sendCounterExampleToCoordinator(int counter_number, int clique_count, int in
 	// print counter number
 	sprintf(client_info->sendline, "%d:", counter_number);
 	// print clique count
-	sprintf(client_info->sendline + counter_digits + 1, "%d:", clique_count);
-	// print index
-	sprintf(client_info->sendline + clique_digits + 1, "%d:", index);
 
+	sprintf(client_info->sendline + counter_digits + 1, "%d:", clique_count);
+
+	// print index
+	sprintf(client_info->sendline + counter_digits + clique_digits + 2, "%d:", index);
 
 	// print matrix
 	for(i = offset; i < size; i++) {
 		sprintf(client_info->sendline + i, "%d", matrix[i - offset]);
 	}
 
+	// printf("writing %d bytes of :\n%s\n", size, client_info->sendline);
 	// form the message and send it
 	ret = write(client_info->sockfd, client_info->sendline, size);
 
 	if(ret <= 0) {
-		fprintf(stderr, "Error: wrote 0 bytes to coordinator\n");
+		fprintf(stderr, "Error: wrote %d bytes to coordinator\n", ret);
 	}
 	// printf("wrote out %d bytes to server: %s\n", ret, buffer);
 
