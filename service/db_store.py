@@ -37,6 +37,15 @@ class DBStore():
         cur.close()
 
 
+    def update(self, update_statement):
+        # Open a cursor to perform database operations.
+        cur = self.conn.cursor()
+
+        # Update row in the able.
+        cur.execute(update_statement)
+        cur.close()
+
+
     def get(self, get_statement):
         # Open a cursor to perform database operations.
         cur = self.conn.cursor()
