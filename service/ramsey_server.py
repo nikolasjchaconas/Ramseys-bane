@@ -245,7 +245,7 @@ class RamseyServer():
 
         ''' If a counter ex was found for the currCounterNum, new graph must be constructed
         based on the current counter ex'''
-        if not constructNewGraph:
+        if not updateGraph:
             self.setBestGraph(graph)
         else:
             newGraph = self.constructNewGraph()
@@ -286,7 +286,7 @@ class RamseyServer():
         self.rwl.acquire_read()
         reply = str(self.currCounterNum) + ':' + str(self.bestCliqueCount) 
         reply +=  ':' + str(newIndex) + ':' + self.bestGraph
-        self.release()
+        self.rwl.release()
 
         conn.send(reply)
         time.sleep(2)
@@ -301,7 +301,7 @@ class RamseyServer():
         try:
             counterNum = int(counterNum)
             cliqueCnt = int(cliqueCnt)
-            index = int(index)
+            clientIndex = int(clientIndex)
         except Exception as e:
             '''In case client didn't in right format; ignore that int conversion and set currNum to 0'''
             self.logger.debug('Encountered error: %s' %e)
@@ -336,7 +336,7 @@ class RamseyServer():
         if writeToDB:
             self.rwl.acquire_read()
             counterNum, cliqueCnt, graph = self.currCounterNum, self.bestCliqueCount, self.bestGraph
-            self.release()
+            self.rwl.release()
 
             self.insertIntoDB(counterNum, cliqueCnt, -1, graph)
 
@@ -406,7 +406,7 @@ class RamseyServer():
 
                 if int(counterNum) > 0:
                     self.srvr.logger.debug('Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, counterNum))
-                
+                print data                
                 self.srvr.handleNewCounterExample(conn, data)
  
             except Exception as e:
