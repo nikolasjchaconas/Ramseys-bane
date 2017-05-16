@@ -1,10 +1,16 @@
 #include "client.h"
 
-#define COORDINATOR1_IP "169.231.235.33"
-#define COORDINATOR2_IP "169.231.235.124"
-#define COORDINATOR3_IP "169.231.235.86"
-#define COORDINATOR4_IP "169.231.235.115"
-#define COORDINATOR5_IP "169.231.235.97"
+// #define COORDINATOR1_IP "169.231.235.33"
+// #define COORDINATOR2_IP "169.231.235.124"
+// #define COORDINATOR3_IP "169.231.235.86"
+// #define COORDINATOR4_IP "169.231.235.115"
+// #define COORDINATOR5_IP "169.231.235.97"
+
+#define COORDINATOR1_IP "169.231.16.111"
+#define COORDINATOR2_IP "169.231.16.111"
+#define COORDINATOR3_IP "169.231.16.111"
+#define COORDINATOR4_IP "169.231.16.111"
+#define COORDINATOR5_IP "169.231.16.111"
 
 #define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
@@ -44,6 +50,7 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 	int *out_matrix;
 	int num;
 
+	digits = 3;
 	num = 1;
 	bytes_read = 0;
 	out_matrix = client_info->coordinator_return->out_matrix;
@@ -69,6 +76,7 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 	}
 	strncpy(buffer, client_info->recvline, counter_index - client_info->recvline);
 	client_info->coordinator_return->counter_number = atoi(buffer);
+	digits += numDigits(client_info->coordinator_return->counter_number);
 	bzero(buffer, 1024);
 
 	//coordinator_clique
@@ -79,6 +87,7 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 	}
 	strncpy(buffer, counter_index, clique_index - counter_index);
 	client_info->coordinator_return->clique_count = atoi(buffer);
+	digits += numDigits(client_info->coordinator_return->clique_count);
 	bzero(buffer, 1024);
 
 	//coordinator_index
@@ -89,16 +98,18 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 	}
 	strncpy(buffer, clique_index, row_index - clique_index);
 	client_info->coordinator_return->index = atoi(buffer);
+	digits += numDigits(client_info->coordinator_return->index);
 	bzero(buffer, 1024);
 
+	// printf("RECEIVED:\n%s", client_info->recvline);
 	// if my current counter number is less than the one the coordinator has
-	if(counter_number < client_info->coordinator_return->counter_number && out_matrix) {
-		matrix_size = client_info->coordinator_return->counter_number * client_info->coordinator_return->counter_number;
-		bzero(out_matrix, LARGEST_MATRIX_SIZE * sizeof(int));
-		for(i = 0; i < matrix_size; i++) {
-			out_matrix[i] = *(client_info->recvline + digits + i + 1) - '0';
-		}
+	matrix_size = client_info->coordinator_return->counter_number * client_info->coordinator_return->counter_number;
+	bzero(out_matrix, LARGEST_MATRIX_SIZE * sizeof(int));
+	for(i = 0; i < matrix_size; i++) {
+		out_matrix[i] = *(client_info->recvline + digits + i + 1) - '0';
 	}
+
+	printf("Received From Coordinator: counter num: %d, clique count: %d, index: %d\n", client_info->coordinator_return->counter_number, client_info->coordinator_return->clique_count, client_info->coordinator_return->index);
 
 	return client_info->coordinator_return->counter_number;
 }
@@ -171,6 +182,8 @@ int sendCounterExampleToCoordinator(int counter_number, int clique_count, int in
 
 	// print index
 	sprintf(client_info->sendline + counter_digits + clique_digits + 2, "%d:", index);
+
+	// printGraph(matrix, counter_number);
 
 	// print matrix
 	for(i = offset; i < size; i++) {
