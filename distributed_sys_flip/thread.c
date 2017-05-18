@@ -7,7 +7,7 @@
 #include "client_protocol/client.h"
 #include "matrix.h"
 #include "limits.h"
-#define NUM_THREADS	2
+#define NUM_THREADS 1
 
 int bestCliqueCount = INT_MAX;
 int bestNodeCount = 0;
@@ -108,7 +108,7 @@ void *findCounterExample(void* args){
 	coordinator_struct *coordinator_return;
 
 	random_iterations = 50;
-	nodeCount = 130;
+	nodeCount = 160;
 	client_info = (client_struct *)args;
 	coordinator_return = client_info->coordinator_return;
 
