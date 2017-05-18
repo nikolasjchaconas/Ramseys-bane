@@ -136,7 +136,7 @@ class RamseyServer():
 
     def setCurrCounterNum(self, counterNum):
         self.rwl.acquire_write()
-        self.currCounterNum = max(counterNum, self.currCounterNum)
+        self.currCounterNum = counterNum
         self.rwl.release()
 
 
@@ -279,7 +279,7 @@ class RamseyServer():
         updateState = False
         self.lock.acquire()
         try:
-            if counterNum >= self.getCurrCounterNum():
+            if counterNum > self.getCurrCounterNum():
                 self.setCurrCounterNum(counterNum)
                 updateState = True
 
@@ -293,7 +293,7 @@ class RamseyServer():
                 indexQueue = self.getIndexQueue()
                 if lastAssignedindex != -1 and lastAssignedindex in indexQueue:
                     idx = indexQueue.index(lastAssignedindex)
-                    indexQueue = indexQueue[:idx]
+                    indexQueue = indexQueue[:idx]                    
                     self.setIndexQueue(indexQueue)
         finally:
             self.lock.release()
@@ -307,12 +307,13 @@ class RamseyServer():
         else:
             newIndex = -1
         self.rwl.acquire_read()
-        reply = str(self.currCounterNum) + ':' + str(self.bestCliqueCount) 
-        reply +=  ':' + str(newIndex) + ':' + self.bestGraph
+        counterNum, cliqueCnt, bestGraph = self.currCounterNum, self.bestCliqueCount, self.bestGraph
         self.rwl.release()
-        print "reply is "
-        #print self.currCounterNum, self.bestCliqueCount, newIndex
-        print reply
+
+        reply = str(counterNum) + ':' + str(cliqueCnt) 
+        reply +=  ':' + str(newIndex) + ':' + bestGraph
+
+        self.srvr.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
         conn.send(reply)
         time.sleep(2)
         conn.close()
@@ -334,27 +335,54 @@ class RamseyServer():
 
         self.lock.acquire()
         try:
-            if cliqueCnt == 0 and counterNum >= self.getCurrCounterNum():
-                '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
-                 So everyone should start working on the next counterNum. '''
 
-                '''Store the counter ex graph in DB; we don't care about index'''
-                self.updateState(counterNum, cliqueCnt, graph)
-                
-                logMsg = 'Found counter example for: %d' %(counterNum)
-                self.logger.debug(logMsg)
+            if counterNum == self.getCurrCounterNum():
+                if cliqueCnt == 0:
+                    '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
+                     So everyone should start working on the next counterNum. '''
 
-            elif cliqueCnt < self.getBestCliqueCount() and counterNum >= self.getCurrCounterNum():
-                ''' Found a graph with better clique count '''
-                self.updateState(counterNum, cliqueCnt, graph)
-            
-            elif not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
-                '''No more index to distribute; accept any graph not same as old one'''
+                    '''Store the counter ex graph in DB; we don't care about index'''
+                    self.updateState(counterNum, cliqueCnt, graph)
+                    
+                    logMsg = 'Found counter example for: %d' %(counterNum)
+                    self.logger.debug(logMsg)
+
+                elif cliqueCnt < self.getBestCliqueCount():
+                    ''' Found a graph with better clique count '''
+                    self.updateState(counterNum, cliqueCnt, graph)
+
+                elif self.getBestCliqueCount() != 0 and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
+                    '''No more index to distribute; accept any graph not same as old one'''
+                    self.updateState(counterNum, cliqueCnt, graph)
+
+
+            elif counterNum > self.getCurrCounterNum():
                 self.updateState(counterNum, cliqueCnt, graph)
 
             else:
                 ''' Nothing to update; don't store anything in db'''
                 writeToDB = False
+
+            # if cliqueCnt == 0 and counterNum >= self.getCurrCounterNum():
+            #     '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
+            #      So everyone should start working on the next counterNum. '''
+
+            #     '''Store the counter ex graph in DB; we don't care about index'''
+            #     self.updateState(counterNum, cliqueCnt, graph)
+                
+            #     logMsg = 'Found counter example for: %d' %(counterNum)
+            #     self.logger.debug(logMsg)
+
+            # elif cliqueCnt < self.getBestCliqueCount() and counterNum >= self.getCurrCounterNum():
+            #     ''' Found a graph with better clique count '''
+            #     self.updateState(counterNum, cliqueCnt, graph)
+            
+            # elif counterNum >= self.getCurrCounterNum() and self.getBestCliqueCount() != 0:
+            #     if self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
+            #         '''No more index to distribute; accept any graph not same as old one'''
+            #         self.updateState(counterNum, cliqueCnt, graph)
+
+            
 
             '''write to DB if currNum is greater any previous value'''
             if writeToDB:
@@ -431,10 +459,9 @@ class RamseyServer():
             while len(data) < dataSize:
                 data += conn.recv(BUFFER_SIZE)
 
-            # if int(counterNum) > 0:
-            self.srvr.logger.debug('Received message from: (%s:%d). Counter example number received is %s' %(self.ip, self.port, counterNum))
-            #print counterNum, cliqueCnt, index            
-            print data
+            
+            self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
+                         
             self.srvr.handleNewCounterExample(conn, data)
  
             # except Exception as e:
