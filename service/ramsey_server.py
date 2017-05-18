@@ -406,12 +406,12 @@ class RamseyServer():
         return self.config['servers'][svrId][0], self.config['servers'][svrId][1]
 
 
-    def createExampleFile(self):
+    def createExampleFile(self, currNum, graph):
         try:
             if not os.path.exists(COUNTER_EX_DIR):
                 os.makedirs(COUNTER_EX_DIR)
-            f= open(COUNTER_EX_DIR + '/' + str(self.bestCliqueCount) + '.txt','w+')
-            f.write(self.bestGraph)
+            f= open(COUNTER_EX_DIR + '/' + str(currNum) + '.txt','w+')
+            f.write(graph)
             f.close()
         except Exception as e:
             self.logger.debug(e)
@@ -419,9 +419,11 @@ class RamseyServer():
 
         
     def postOnSlack(self):
-        self.createExampleFile()
+        
+        currNum, graph = self.getCurrCounterNum(), self.getBestGraph()
+        self.createExampleFile(currNum, graph)
         try:
-            cmd = 'curl -F file=@' + COUNTER_EX_DIR + '/' + str(self.currCounterNum) + '.txt'
+            cmd = 'curl -F file=@' + COUNTER_EX_DIR + '/' + str(currNum) + '.txt'
             cmd += ' -F channels=#counter_examples -F token=***REMOVED***'
             cmd += ' https://slack.com/api/files.upload'
             # cmd = "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\""
