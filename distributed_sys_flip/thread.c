@@ -221,7 +221,9 @@ int main (int argc, char *argv[]){
 	int i;
 	pthread_t threads[NUM_THREADS];
 	client_struct *client_info;
-
+	
+	//useful for logging purposes
+	setbuf(stdout, NULL);
 	srand(time(NULL));
 	pthread_rwlock_init(&bestCliqueCountMutex, NULL);
 
