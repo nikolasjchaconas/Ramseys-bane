@@ -6,7 +6,7 @@ clique:  thread.o clique-count.o greedyGraphPermute.o distributed_flip.o client_
 	$(CC) -lm -pthread -o $@ $^
 
 run: 
-	time ./clique
+	./clique
 
 clean:
 	rm clique
