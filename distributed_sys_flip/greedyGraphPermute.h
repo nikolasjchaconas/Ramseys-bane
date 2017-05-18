@@ -25,7 +25,7 @@ struct params {
     int index;
 };
 
-void *threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index);
+int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index);
 
 const int greedyRowPermute(int* graph, const int nodeCount, const int cliqueCount, const int row);
 

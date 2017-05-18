@@ -6,11 +6,11 @@
 // #define COORDINATOR4_IP "169.231.235.115"
 // #define COORDINATOR5_IP "169.231.235.97"
 
-#define COORDINATOR1_IP "169.231.16.111"
-#define COORDINATOR2_IP "169.231.16.111"
-#define COORDINATOR3_IP "169.231.16.111"
-#define COORDINATOR4_IP "169.231.16.111"
-#define COORDINATOR5_IP "169.231.16.111"
+#define COORDINATOR1_IP "169.231.133.53"
+#define COORDINATOR2_IP "169.231.133.53"
+#define COORDINATOR3_IP "169.231.133.53"
+#define COORDINATOR4_IP "169.231.133.53"
+#define COORDINATOR5_IP "169.231.133.53"
 
 #define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
@@ -49,6 +49,7 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 	int size;
 	int *out_matrix;
 	int num;
+	int counter;
 
 	digits = 3;
 	num = 1;
@@ -74,40 +75,47 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 		printf("Sujaya you forgot the colon character!!!\n");
 		return -1;
 	}
-	strncpy(buffer, client_info->recvline, counter_index - client_info->recvline);
+	counter = counter_index - client_info->recvline;
+	strncpy(buffer, client_info->recvline, counter);
 	client_info->coordinator_return->counter_number = atoi(buffer);
-	digits += numDigits(client_info->coordinator_return->counter_number);
+	digits += counter;
 	bzero(buffer, 1024);
 
 	//coordinator_clique
+	counter_index++;
 	clique_index = strchr(counter_index, ':');
 	if(!clique_index) {
 		printf("Sujaya you forgot the colon character!!!\n");
 		return -1;
 	}
-	strncpy(buffer, counter_index, clique_index - counter_index);
+	counter = clique_index - counter_index;
+	strncpy(buffer, counter_index, counter);
 	client_info->coordinator_return->clique_count = atoi(buffer);
-	digits += numDigits(client_info->coordinator_return->clique_count);
+	digits += counter;
 	bzero(buffer, 1024);
 
 	//coordinator_index
+	clique_index++;
 	row_index = strchr(clique_index, ':');
 	if(!row_index) {
 		printf("Sujaya you forgot the colon character!!!\n");
 		return -1;
 	}
-	strncpy(buffer, clique_index, row_index - clique_index);
+	counter = row_index - clique_index;
+	strncpy(buffer, clique_index, counter);
 	client_info->coordinator_return->index = atoi(buffer);
-	digits += numDigits(client_info->coordinator_return->index);
+	digits += counter;
 	bzero(buffer, 1024);
 
 	// printf("RECEIVED:\n%s", client_info->recvline);
 	// if my current counter number is less than the one the coordinator has
 	matrix_size = client_info->coordinator_return->counter_number * client_info->coordinator_return->counter_number;
 	bzero(out_matrix, LARGEST_MATRIX_SIZE * sizeof(int));
+
 	for(i = 0; i < matrix_size; i++) {
-		out_matrix[i] = *(client_info->recvline + digits + i + 1) - '0';
+		out_matrix[i] = *(client_info->recvline + digits + i) - '0';
 	}
+	// printf("received LINE: %s\n\n", client_info->recvline);
 
 	printf("Received From Coordinator: counter num: %d, clique count: %d, index: %d\n", client_info->coordinator_return->counter_number, client_info->coordinator_return->clique_count, client_info->coordinator_return->index);
 
@@ -182,8 +190,6 @@ int sendCounterExampleToCoordinator(int counter_number, int clique_count, int in
 
 	// print index
 	sprintf(client_info->sendline + counter_digits + clique_digits + 2, "%d:", index);
-
-	// printGraph(matrix, counter_number);
 
 	// print matrix
 	for(i = offset; i < size; i++) {
@@ -316,7 +322,7 @@ void createClient(client_struct *client_info) {
 	client_info->coordinator_ports = (int *)malloc(sizeof(int) * client_info->num_coordinators);
 	client_info->coordinator_ports[0] = COORDINATOR_PORT;
 	client_info->coordinator_ports[1] = COORDINATOR_PORT;
-	client_info->coordinator_ports[2] = COORDINATOR_PORT;
-	client_info->coordinator_ports[3] = COORDINATOR_PORT;
-	client_info->coordinator_ports[4] = COORDINATOR_PORT;
+	client_info->coordinator_ports[2] = COORDINATOR_PORT + 1;
+	client_info->coordinator_ports[3] = COORDINATOR_PORT + 1;
+	client_info->coordinator_ports[4] = COORDINATOR_PORT + 1;
 }
