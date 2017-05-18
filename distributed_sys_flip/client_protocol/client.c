@@ -1,16 +1,10 @@
 #include "client.h"
 
-// #define COORDINATOR1_IP "169.231.235.33"
-// #define COORDINATOR2_IP "169.231.235.124"
-// #define COORDINATOR3_IP "169.231.235.86"
-// #define COORDINATOR4_IP "169.231.235.115"
-// #define COORDINATOR5_IP "169.231.235.97"
-
-#define COORDINATOR1_IP "169.231.133.53"
-#define COORDINATOR2_IP "169.231.133.53"
-#define COORDINATOR3_IP "169.231.133.53"
-#define COORDINATOR4_IP "169.231.133.53"
-#define COORDINATOR5_IP "169.231.133.53"
+#define COORDINATOR1_IP "169.231.235.33"
+#define COORDINATOR2_IP "169.231.235.124"
+#define COORDINATOR3_IP "169.231.235.86"
+#define COORDINATOR4_IP "169.231.235.115"
+#define COORDINATOR5_IP "169.231.235.97"
 
 #define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
@@ -322,7 +316,7 @@ void createClient(client_struct *client_info) {
 	client_info->coordinator_ports = (int *)malloc(sizeof(int) * client_info->num_coordinators);
 	client_info->coordinator_ports[0] = COORDINATOR_PORT;
 	client_info->coordinator_ports[1] = COORDINATOR_PORT;
-	client_info->coordinator_ports[2] = COORDINATOR_PORT + 1;
-	client_info->coordinator_ports[3] = COORDINATOR_PORT + 1;
-	client_info->coordinator_ports[4] = COORDINATOR_PORT + 1;
+	client_info->coordinator_ports[2] = COORDINATOR_PORT;
+	client_info->coordinator_ports[3] = COORDINATOR_PORT;
+	client_info->coordinator_ports[4] = COORDINATOR_PORT;
 }
