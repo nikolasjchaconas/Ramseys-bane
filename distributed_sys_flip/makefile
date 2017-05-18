@@ -1,4 +1,5 @@
 CC      = gcc
+HOST=`hostname`
 
 all: clique 
 
