@@ -313,7 +313,7 @@ class RamseyServer():
         reply = str(counterNum) + ':' + str(cliqueCnt) 
         reply +=  ':' + str(newIndex) + ':' + bestGraph
 
-        self.srvr.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
+        self.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
         conn.send(reply)
         time.sleep(2)
         conn.close()
@@ -459,7 +459,6 @@ class RamseyServer():
             while len(data) < dataSize:
                 data += conn.recv(BUFFER_SIZE)
 
-            
             self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
                          
             self.srvr.handleNewCounterExample(conn, data)
