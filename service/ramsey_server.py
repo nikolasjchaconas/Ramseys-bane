@@ -161,7 +161,7 @@ class RamseyServer():
         
         self.rwl.acquire_write()
         if self.indexQueue:
-            self.indexQueue = self.indexQueue[:idx]
+            self.indexQueue = self.indexQueue[idx:]
         self.rwl.release()
 
 
@@ -293,7 +293,7 @@ class RamseyServer():
                 indexQueue = self.getIndexQueue()
                 if lastAssignedindex != -1 and lastAssignedindex in indexQueue:
                     idx = indexQueue.index(lastAssignedindex)
-                    indexQueue = indexQueue[:idx]                    
+                    indexQueue = indexQueue[idx:] 
                     self.setIndexQueue(indexQueue)
         finally:
             self.lock.release()
@@ -354,7 +354,9 @@ class RamseyServer():
                 elif self.getBestCliqueCount() != 0 and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
                     '''No more index to distribute; accept any graph not same as old one'''
                     self.updateState(counterNum, cliqueCnt, graph)
-
+                else:
+                    ''' Nothing to update; don't store anything in db'''
+                    writeToDB = False
 
             elif counterNum > self.getCurrCounterNum():
                 self.updateState(counterNum, cliqueCnt, graph)
