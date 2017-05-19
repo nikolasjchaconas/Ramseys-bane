@@ -345,7 +345,7 @@ class RamseyServer():
                     
                     logMsg = 'Found counter example for: %d' %(counterNum)
                     self.logger.debug(logMsg)
-                    postOnSlack()
+                    self.postOnSlack()
 
                 elif cliqueCnt < self.getBestCliqueCount():
                     ''' Found a graph with better clique count '''
