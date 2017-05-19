@@ -188,7 +188,6 @@ class RamseyServer():
             insert_statement = 'INSERT INTO '+ COUNTER_EX_TABLE + ' (counterNum, cliqueCount, currIndex, bestGraph) VALUES (%d, %d, %d, \'%s\')' % \
             (counterNum, cliqueCnt, index, graph)
             self.db.insert(insert_statement)
-            self.postOnSlack()
 
 
     def updateIndexOnDB(self, index):
@@ -346,6 +345,7 @@ class RamseyServer():
                     
                     logMsg = 'Found counter example for: %d' %(counterNum)
                     self.logger.debug(logMsg)
+                    postOnSlack()
 
                 elif cliqueCnt < self.getBestCliqueCount():
                     ''' Found a graph with better clique count '''
