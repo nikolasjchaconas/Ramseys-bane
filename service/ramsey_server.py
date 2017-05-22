@@ -238,10 +238,10 @@ class RamseyServer():
 
             svrNum = int(self.svrId[-1])
             for i in range(length):
-                if tmpGraph[i] == '1' and (cnt%NO_OF_SERVERS == svrNum):
-                    tmpIdxQueue.append(i)
+                if tmpGraph[i] == '1':
+                    if (cnt%NO_OF_SERVERS == svrNum-1):
+                        tmpIdxQueue.append(i)
                     cnt += 1
-        self.logger.debug("count = %d, len of idxQue = %d" %(cnt, len(tmpIdxQueue)))
         self.setIndexQueue(tmpIdxQueue)
 
 
