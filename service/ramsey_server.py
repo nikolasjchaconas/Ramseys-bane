@@ -155,16 +155,6 @@ class RamseyServer():
         self.rwl.release()
 
 
-    # def updateIndexQueue(self, idx):
-    #     ''' Treat indexQueue like a queue; pop the index on which client should work on.
-    #     Update the index in the db'''
-        
-    #     self.rwl.acquire_write()
-    #     if self.indexQueue:
-    #         self.indexQueue = self.indexQueue[idx:]
-    #     self.rwl.release()
-
-
     def getAndSetNextIndex(self):
         ''' Treat indexQueue like a queue; pop the index on which client should work on.
         Update the index in the db'''
@@ -188,16 +178,6 @@ class RamseyServer():
             insert_statement = 'INSERT INTO '+ COUNTER_EX_TABLE + ' (counterNum, cliqueCount, currIndex, bestGraph) VALUES (%d, %d, %d, \'%s\')' % \
             (counterNum, cliqueCnt, index, graph)
             self.db.insert(insert_statement)
-
-
-    # def updateIndexOnDB(self, index):
-    #     self.rwl.acquire_read()
-    #     counterNum = self.currCounterNum
-    #     self.rwl.release()
-
-    #     update_statement = 'UPDATE '+ COUNTER_EX_TABLE + ' SET currIndex=%d WHERE counterNum=%d' % \
-    #     (index, counterNum)
-    #     self.db.update(update_statement)
 
 
     def updateStateOnDB(self, counterNum, cliqueCnt, graph, index=-1):
@@ -287,13 +267,6 @@ class RamseyServer():
 
             if updateState:
                 self.updateState(counterNum, bestCliqueCount, bestGraph)
-            # else:
-            #     '''Some one might have assigned more indices to clients; splice everything up until that index '''
-            #     indexQueue = self.getIndexQueue()
-            #     if lastAssignedindex != -1 and lastAssignedindex in indexQueue:
-            #         idx = indexQueue.index(lastAssignedindex)
-            #         indexQueue = indexQueue[idx:] 
-            #         self.setIndexQueue(indexQueue)
         finally:
             self.lock.release()
 
@@ -365,27 +338,6 @@ class RamseyServer():
                 ''' Nothing to update; don't store anything in db'''
                 writeToDB = False
 
-            # if cliqueCnt == 0 and counterNum >= self.getCurrCounterNum():
-            #     '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
-            #      So everyone should start working on the next counterNum. '''
-
-            #     '''Store the counter ex graph in DB; we don't care about index'''
-            #     self.updateState(counterNum, cliqueCnt, graph)
-                
-            #     logMsg = 'Found counter example for: %d' %(counterNum)
-            #     self.logger.debug(logMsg)
-
-            # elif cliqueCnt < self.getBestCliqueCount() and counterNum >= self.getCurrCounterNum():
-            #     ''' Found a graph with better clique count '''
-            #     self.updateState(counterNum, cliqueCnt, graph)
-            
-            # elif counterNum >= self.getCurrCounterNum() and self.getBestCliqueCount() != 0:
-            #     if self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
-            #         '''No more index to distribute; accept any graph not same as old one'''
-            #         self.updateState(counterNum, cliqueCnt, graph)
-
-            
-
             '''write to DB if currNum is greater any previous value'''
             if writeToDB:
                 self.rwl.acquire_read()
@@ -454,7 +406,6 @@ class RamseyServer():
             conn, recvMsg = self.conn, ''
             data = conn.recv(BUFFER_SIZE)
 
-            #try:
             counterNum, cliqueCnt, index, _ = data.split(':')
 
             '''The msg will be ==> counter_num:clique_count:index:matrix'''
@@ -466,10 +417,6 @@ class RamseyServer():
             self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
                          
             self.srvr.handleNewCounterExample(conn, data)
- 
-            # except Exception as e:
-            #     print e
-            #     self.srvr.logger.debug('Caught exception: %s' %e)
 
             '''Kill the thread after use'''
             sys.exit()
