@@ -20,6 +20,7 @@ COUNTER_EX_TABLE = 'counter_examples'
 BUFFER_SIZE = 1024*1024
 COUNTER_EX_DIR = 'counter_examples'
 MAX_CLIQUE_CNT = 999
+NO_OF_SERVERS = 5
 
 ######################################################
 
@@ -72,11 +73,10 @@ class RamseyServer():
         rows = self.db.get(get_statement)
         if rows:
             row = rows[0]
-            self.setCurrCounterNum(row[0])
-            self.setBestCliqueCount(row[1])
+            self.setCurrCounterNum(int(row[0]))
+            self.setBestCliqueCount(int(row[1]))
             self.setBestGraph(row[3])
             self.fillIndexQueue()
-            self.updateIndexQueue(row[2])
 
             self.logger.debug('Loaded the best counter example number from db: %d' %(row[0]))
 
@@ -155,14 +155,14 @@ class RamseyServer():
         self.rwl.release()
 
 
-    def updateIndexQueue(self, idx):
-        ''' Treat indexQueue like a queue; pop the index on which client should work on.
-        Update the index in the db'''
+    # def updateIndexQueue(self, idx):
+    #     ''' Treat indexQueue like a queue; pop the index on which client should work on.
+    #     Update the index in the db'''
         
-        self.rwl.acquire_write()
-        if self.indexQueue:
-            self.indexQueue = self.indexQueue[idx:]
-        self.rwl.release()
+    #     self.rwl.acquire_write()
+    #     if self.indexQueue:
+    #         self.indexQueue = self.indexQueue[idx:]
+    #     self.rwl.release()
 
 
     def getAndSetNextIndex(self):
@@ -171,36 +171,36 @@ class RamseyServer():
         nextIdx = -1
         self.rwl.acquire_write()
         if len(self.indexQueue) > 0:
-            nextIdx = self.indexQueue.pop(0)
+            randIdx = random.randint(0, len(self.indexQueue)-1)
+            nextIdx = self.indexQueue.pop(randIdx)
         self.rwl.release()        
 
-        self.updateIndexOnDB(nextIdx)
         return nextIdx
 
 
 ############################## DB methods ##################################################
 
-    def insertIntoDB(self, counterNum, cliqueCnt, index, graph):
+    def insertIntoDB(self, counterNum, cliqueCnt, graph, index=-1):
         rows = self.readFromDB(counterNum)
         if rows:
-            self.updateStateOnDB(counterNum, cliqueCnt, index, graph)
+            self.updateStateOnDB(counterNum, cliqueCnt, graph)
         else:
             insert_statement = 'INSERT INTO '+ COUNTER_EX_TABLE + ' (counterNum, cliqueCount, currIndex, bestGraph) VALUES (%d, %d, %d, \'%s\')' % \
             (counterNum, cliqueCnt, index, graph)
             self.db.insert(insert_statement)
 
 
-    def updateIndexOnDB(self, index):
-        self.rwl.acquire_read()
-        counterNum = self.currCounterNum
-        self.rwl.release()
+    # def updateIndexOnDB(self, index):
+    #     self.rwl.acquire_read()
+    #     counterNum = self.currCounterNum
+    #     self.rwl.release()
 
-        update_statement = 'UPDATE '+ COUNTER_EX_TABLE + ' SET currIndex=%d WHERE counterNum=%d' % \
-        (index, counterNum)
-        self.db.update(update_statement)
+    #     update_statement = 'UPDATE '+ COUNTER_EX_TABLE + ' SET currIndex=%d WHERE counterNum=%d' % \
+    #     (index, counterNum)
+    #     self.db.update(update_statement)
 
 
-    def updateStateOnDB(self, counterNum, cliqueCnt, index, graph):
+    def updateStateOnDB(self, counterNum, cliqueCnt, graph, index=-1):
 
         update_statement = 'UPDATE '+ COUNTER_EX_TABLE + ' SET cliqueCount=%d, currIndex=%d, bestGraph=\'%s\' WHERE counterNum=%d' % \
         (cliqueCnt, index, graph, counterNum)
@@ -213,16 +213,16 @@ class RamseyServer():
         if not rows:
             return None
         row = rows[0]
-        counterNum, bestCliqueCount, index, bestGraph = row[0], row[1], row[2], row[3]
-        return counterNum, bestCliqueCount, index, bestGraph
+        counterNum, bestCliqueCount, bestGraph = row[0], row[1], row[3]
+        return counterNum, bestCliqueCount, bestGraph
 
 
     def readMaxNumFromDB(self):
         get_statement = 'SELECT * FROM ' + COUNTER_EX_TABLE + ' WHERE counterNum=(SELECT MAX(counterNum) from ' + COUNTER_EX_TABLE + ')'
         rows = self.db.get(get_statement)
         row = rows[0]
-        counterNum, bestCliqueCount, index, bestGraph = row[0], row[1], row[2], row[3]
-        return counterNum, bestCliqueCount, index, bestGraph
+        counterNum, bestCliqueCount, bestGraph = row[0], row[1], row[3]
+        return counterNum, bestCliqueCount, bestGraph
 
 ############################## Helper methods ##################################################
 
@@ -234,12 +234,14 @@ class RamseyServer():
         for that counter_ex number.'''
         if self.getBestCliqueCount() != 0:
             tmpGraph = self.getBestGraph()
-            length = len(tmpGraph)
-             
-            for i in range(length):
-                if tmpGraph[i] == '1':
-                    tmpIdxQueue.append(i)
+            length, cnt = len(tmpGraph), 1
 
+            svrNum = int(self.svrId[-1])
+            for i in range(length):
+                if tmpGraph[i] == '1' and (cnt%NO_OF_SERVERS == svrNum):
+                    tmpIdxQueue.append(i)
+                    cnt += 1
+        self.logger.debug("count = %d, len of idxQue = %d" %(cnt, len(tmpIdxQueue)))
         self.setIndexQueue(tmpIdxQueue)
 
 
@@ -272,14 +274,12 @@ class RamseyServer():
 
     def updateStateFromDB(self):
         '''Read variables from DB; update any variable that has been modified by other servers'''
-        counterNum, bestCliqueCount, lastAssignedindex, bestGraph = self.readMaxNumFromDB()
-        lastAssignedindex = int(lastAssignedindex)
+        counterNum, bestCliqueCount, bestGraph = self.readMaxNumFromDB()
 
         updateState = False
         self.lock.acquire()
         try:
             if counterNum > self.getCurrCounterNum():
-                self.setCurrCounterNum(counterNum)
                 updateState = True
 
             elif bestCliqueCount < self.getBestCliqueCount() and counterNum == self.getCurrCounterNum():
@@ -287,13 +287,13 @@ class RamseyServer():
 
             if updateState:
                 self.updateState(counterNum, bestCliqueCount, bestGraph)
-            else:
-                '''Some one might have assigned more indices to clients; splice everything up until that index '''
-                indexQueue = self.getIndexQueue()
-                if lastAssignedindex != -1 and lastAssignedindex in indexQueue:
-                    idx = indexQueue.index(lastAssignedindex)
-                    indexQueue = indexQueue[idx:] 
-                    self.setIndexQueue(indexQueue)
+            # else:
+            #     '''Some one might have assigned more indices to clients; splice everything up until that index '''
+            #     indexQueue = self.getIndexQueue()
+            #     if lastAssignedindex != -1 and lastAssignedindex in indexQueue:
+            #         idx = indexQueue.index(lastAssignedindex)
+            #         indexQueue = indexQueue[idx:] 
+            #         self.setIndexQueue(indexQueue)
         finally:
             self.lock.release()
 
@@ -392,7 +392,7 @@ class RamseyServer():
                 counterNum, cliqueCnt, graph = self.currCounterNum, self.bestCliqueCount, self.bestGraph
                 self.rwl.release()
 
-                self.insertIntoDB(counterNum, cliqueCnt, -1, graph)
+                self.insertIntoDB(counterNum, cliqueCnt, graph)
 
         finally:
             self.lock.release()
