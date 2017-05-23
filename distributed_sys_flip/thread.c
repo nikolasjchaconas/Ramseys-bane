@@ -107,7 +107,7 @@ void *findCounterExample(void* args){
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
 
-	random_iterations = 5;
+	random_iterations = 20;
 	nodeCount = 150;
 	client_info = (client_struct *)args;
 	coordinator_return = client_info->coordinator_return;
@@ -228,7 +228,6 @@ int main (int argc, char *argv[]){
 		NUM_THREADS = atoi(argv[1]);
 	}
 	pthread_t threads[NUM_THREADS];
-
 	printf("\n\nYou have chosen %d Threads\n\n", NUM_THREADS);
 	//useful for logging purposes
 	setbuf(stdout, NULL);
