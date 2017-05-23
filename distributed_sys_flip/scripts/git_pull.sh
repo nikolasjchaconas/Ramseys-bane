@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ../..
+cd ..
 git pull
 make clean
 make
