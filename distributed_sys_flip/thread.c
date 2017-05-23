@@ -223,8 +223,11 @@ int main (int argc, char *argv[]){
 	int i;
 	client_struct *client_info;
 	NUM_THREADS = 4;
-
-	if(argc > 1) {
+	if(argc < 2) {
+		printf("Usage ./clique NUM_THREADS\n");
+		exit(1);
+	}
+	else {
 		NUM_THREADS = atoi(argv[1]);
 	}
 	pthread_t threads[NUM_THREADS];
