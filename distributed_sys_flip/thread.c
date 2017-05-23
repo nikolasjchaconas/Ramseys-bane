@@ -50,7 +50,7 @@ void printGraph(int *graph, const int nodeCount){
 	int value;
 	int cliqueCount;
 
-	cliqueCount = CliqueCount(graph, nodeCount);
+	cliqueCount = CliqueCount(graph, nodeCount, cliqueCount);
 
 	printf("%d %d", nodeCount, cliqueCount);
 
@@ -107,17 +107,18 @@ void *findCounterExample(void* args){
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
 
-	random_iterations = 50;
-	nodeCount = 160;
+	random_iterations = 5;
+	nodeCount = 150;
 	client_info = (client_struct *)args;
 	coordinator_return = client_info->coordinator_return;
 
 	graph = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 	bzero(graph, LARGEST_MATRIX_SIZE);
 
-	coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, INT_MAX, 0, graph, client_info);
+	cliqueCount = INT_MAX;
+	coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 0, graph, client_info);
 	nodeCount = coordinator_node_count > nodeCount ? coordinator_node_count : nodeCount;
-	
+
 	initialize_50_50(graph, nodeCount);
 	printf("Beginning search on node count of %d\n", nodeCount);
 
@@ -125,7 +126,8 @@ void *findCounterExample(void* args){
 		if(random_explore_phase) {
 			printf("Beginning Random explore phase on node count %d\n", nodeCount);
 			//printGraph(graph, nodeCount);
-			cliqueCount = CliqueCount(graph, nodeCount);
+
+			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 			for(i = 0; i < random_iterations; i++) {
 				cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);
 				if(cliqueCount == 0) {
@@ -134,7 +136,7 @@ void *findCounterExample(void* args){
 				}
 			}
 		} else {
-			cliqueCount = CliqueCount(graph, nodeCount);
+			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 		}
 
 		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 1, graph, client_info);
@@ -161,9 +163,9 @@ void *findCounterExample(void* args){
 				copyMatrix(coordinator_return->out_matrix, nodeCount - 1, graph, nodeCount);
 				//printf("NEW:\n");
 				//printGraph(graph, nodeCount);
-				cliqueCount = CliqueCount(graph, nodeCount);
+				cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 
-				if(cliqueCount <= 10) {
+				if(cliqueCount <= -1) {
 					printf("\nAYYY embedding found a good clique count of %d for %d!\n", cliqueCount, nodeCount);
 					random_explore_phase = 0;
 				} else {
@@ -194,7 +196,7 @@ void *findCounterExample(void* args){
 			continue;
 		}
 
-		int count = threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index);
+		int count = threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index, client_info);
 		cliqueCount = count > cliqueCount ? count : cliqueCount;
 
 		pthread_rwlock_rdlock(&bestCliqueCountMutex);
@@ -226,7 +228,7 @@ int main (int argc, char *argv[]){
 		NUM_THREADS = atoi(argv[1]);
 	}
 	pthread_t threads[NUM_THREADS];
-	
+
 	printf("\n\nYou have chosen %d Threads\n\n", NUM_THREADS);
 	//useful for logging purposes
 	setbuf(stdout, NULL);

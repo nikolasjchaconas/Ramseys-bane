@@ -74,7 +74,7 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 		// The best graph after a certain number of attempts is used as the basis for a search.
 		flip_50_50(matrix, counter_number, matrix_size);
 
-		int currentCount = CliqueCount(matrix, counter_number);
+		int currentCount = CliqueCount(matrix, counter_number, *bestCount);
 		printf("currentCount is: %d\n",currentCount);
 		if(currentCount < *bestCount){
 			*bestCount = currentCount;
@@ -124,7 +124,7 @@ void systematic_50_50_flip(int *matrix, int counter_number, int matrix_size, int
 				matrix[index0] = 1;
 
 				//Check the new matrices cliques count
-				int cliqueInCopy = CliqueCount(matrix, counter_number);
+				int cliqueInCopy = CliqueCount(matrix, counter_number, *bestCount);
 				printf("Checking out: %d\n",cliqueInCopy);
 				if(cliqueInCopy < *bestCount){
 					*bestCount = cliqueInCopy;

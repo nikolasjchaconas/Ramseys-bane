@@ -86,7 +86,7 @@ const int greedyIndexPermute(int* graph, const int nodeCount, const int cliqueCo
 		while(nextZeroIndex < lastZeroIndex){
 			nextZeroIndex = getNextZeroIndexInRow(graph, nodeCount, row, &col);
 			switchEdges(graph, index, nextZeroIndex);
-			const int newCliqueCount = CliqueCount(graph, nodeCount);
+			const int newCliqueCount = CliqueCount(graph, nodeCount, cliqueCount);
 			printf("Checking out: %d\n",newCliqueCount);
 			
 			if(newCliqueCount < cliqueCount){
@@ -163,7 +163,7 @@ const int greedyIndexPermute(int* graph, const int nodeCount, const int cliqueCo
 // 	pthread_exit(NULL);
 // }
 
-int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index){
+int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index, client_struct *client_info){
 	int newCliqueCount = cliqueCount;
 	if(graph[index] == 1 && nodeCount > 0 && cliqueCount >= 0 && index >= 0 && index < nodeCount*nodeCount){
 
@@ -182,6 +182,8 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int clique
 		//Start with a valid value for the col
 		int col = row + 1;
 		int nextZeroIndex = (row * nodeCount) + col;
+		int flips = 0;
+		int flipThreshold = 5;
 		while(nextZeroIndex < lastZeroIndex){
 			pthread_rwlock_rdlock(&bestCliqueCountMutex);
 			if(bestNodeCount > nodeCount) {
@@ -196,23 +198,41 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int clique
 			}
 			pthread_rwlock_unlock(&bestCliqueCountMutex);
 
+			if(flips != 0 && flips % flipThreshold == 0) {
+				printf("\n%d flips have been made, polling coordinator!\n", flipThreshold);
+				sendCounterExampleToCoordinator(nodeCount, cliqueCount, 0, graph, client_info);
+				if(client_info->coordinator_return->clique_count < cliqueCount) {
+					printf("Coordinator has better cliquecount available! Exiting greedy...\n");
+					pthread_rwlock_rdlock(&bestCliqueCountMutex);
+					bestCliqueCount = client_info->coordinator_return->clique_count;
+					pthread_rwlock_unlock(&bestCliqueCountMutex);
+					return cliqueCount;
+				} else if(client_info->coordinator_return->counter_number > nodeCount) {
+					printf("Coordinator has better nodeCount available! Exiting greedy...\n");
+					pthread_rwlock_rdlock(&bestCliqueCountMutex);
+					bestNodeCount = client_info->coordinator_return->counter_number;
+					pthread_rwlock_unlock(&bestCliqueCountMutex);
+					return cliqueCount;
+				}
+			}
+
 			nextZeroIndex = getNextZeroIndexInRow(graphCopy, nodeCount, row, &col);
 			switchEdges(graphCopy, index, nextZeroIndex);
-			newCliqueCount = CliqueCount(graphCopy, nodeCount);
+			newCliqueCount = CliqueCount(graphCopy, nodeCount, cliqueCount);
 			printf("Checking out: %d\n",newCliqueCount);
 			
 			if(newCliqueCount < cliqueCount){
 				printf("New bestCount is: %d\n", newCliqueCount);
 				pthread_rwlock_wrlock(&bestCliqueCountMutex);
-			   	bestCliqueCount = newCliqueCount;
-			   	copyGraph(graphCopy, graph, nodeCount);
-			    pthread_rwlock_unlock(&bestCliqueCountMutex);
+				bestCliqueCount = newCliqueCount;
+				copyGraph(graphCopy, graph, nodeCount);
+				pthread_rwlock_unlock(&bestCliqueCountMutex);
 				break;
 			}
 			switchEdges(graphCopy, index, nextZeroIndex);
 			col++;
 			nextZeroIndex = (row*nodeCount)+col;
-
+			flips++;
 		}
 	}
 	else{
@@ -305,7 +325,7 @@ const int randomGraphExplore(int* graph, const int nodeCount, const int cliqueCo
 		int graphCopy[matrixSize];
 		copyGraph(graph, graphCopy, nodeCount);
 		randomGraphPermute(graphCopy, nodeCount, 2000);
-		int newCliqueCount = CliqueCount(graphCopy, nodeCount);
+		int newCliqueCount = CliqueCount(graphCopy, nodeCount, cliqueCount);
 		printf("RANDOM: currentCount is: %d\n",newCliqueCount);
 		if(newCliqueCount < cliqueCount){
 			copyGraph(graphCopy, graph, nodeCount);
