@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ~/Ramseys-bane/distributed_sys_flip/
+cd ../..
 git pull
 make clean
 make
