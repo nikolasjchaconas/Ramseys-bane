@@ -99,7 +99,6 @@ void *findCounterExample(void* args){
 	int rc;
 	long t;
 	int i;
-	int random_iterations;
 	int coordinator_node_count;
 	int received_number;
 	int random_explore_phase = 1;
@@ -107,7 +106,6 @@ void *findCounterExample(void* args){
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
 
-	random_iterations = 20;
 	nodeCount = 150;
 	client_info = (client_struct *)args;
 	coordinator_return = client_info->coordinator_return;
@@ -128,7 +126,7 @@ void *findCounterExample(void* args){
 			//printGraph(graph, nodeCount);
 
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
-			for(i = 0; i < random_iterations; i++) {
+			for(i = 0; i < nodeCount/5; i++) {
 				cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);
 				if(cliqueCount == 0) {
 					printf("WOW random found a clique count of zero, bravo!\n");
