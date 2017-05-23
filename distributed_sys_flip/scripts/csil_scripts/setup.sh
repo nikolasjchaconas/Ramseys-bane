@@ -1,6 +1,7 @@
 #!/bin/bash
 cd ../../
-
+make clean
+make
 make run threads=$1
 sleep 5m
 PROCESS=$(pgrep clique)
