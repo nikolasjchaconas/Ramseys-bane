@@ -7,8 +7,8 @@
 #include "client_protocol/client.h"
 #include "matrix.h"
 #include "limits.h"
-#define NUM_THREADS 1
 
+int NUM_THREADS;
 int bestCliqueCount = INT_MAX;
 int bestNodeCount = 0;
 
@@ -219,9 +219,15 @@ int main (int argc, char *argv[]){
 	int rc;
 	int t;
 	int i;
-	pthread_t threads[NUM_THREADS];
 	client_struct *client_info;
+	NUM_THREADS = 4;
+
+	if(argc > 1) {
+		NUM_THREADS = atoi(argv[1]);
+	}
+	pthread_t threads[NUM_THREADS];
 	
+	printf("\n\nYou have chosen %d Threads\n\n", NUM_THREADS);
 	//useful for logging purposes
 	setbuf(stdout, NULL);
 	srand(time(NULL));

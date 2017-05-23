@@ -7,7 +7,7 @@ clique:  thread.o clique-count.o greedyGraphPermute.o distributed_flip.o client_
 	$(CC) -pthread -o $@ $^ -lm
 
 run: 
-	nohup ./clique > logs/$(HOST).out 2>&1&
+	nohup ./clique $(threads) > logs/$(HOST).out 2>&1&
 
 clean:
 	rm clique
