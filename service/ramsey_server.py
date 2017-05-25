@@ -285,7 +285,8 @@ class RamseyServer():
         reply = str(counterNum) + ':' + str(cliqueCnt) 
         reply +=  ':' + str(newIndex) + ':' + bestGraph
 
-        #self.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
+        if newIndex != -1:
+            self.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
         conn.send(reply)
         time.sleep(2)
         conn.close()
