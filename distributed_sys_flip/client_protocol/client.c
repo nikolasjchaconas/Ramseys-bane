@@ -6,10 +6,72 @@
 #define COORDINATOR4_IP "169.231.235.115"
 #define COORDINATOR5_IP "169.231.235.97"
 
+#define CYCLES_COORDINATOR "169.231.235.58"
+#define CYCLES_COORDINATOR_PORT 5002
+
 #define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
 
 double poll_interval_seconds = 180;
+double send_cpu_interval_seconds = 300;
+
+void sendCPUCycles(client_struct *client_info) {
+	double time_waited;
+	clock_t new_time;
+	clock_t time_passed;
+	long double cycles_to_send;
+	int ret;
+	int size;
+
+	time_waited = getTime() - client_info->last_cpu_send_time;
+
+	if(client_info->id == 0 && time_waited > send_cpu_interval_seconds) {
+		new_time = clock();
+		time_passed = new_time - client_info->initial_time;
+		cycles_to_send = ((long double)time_passed / CLOCKS_PER_SEC ) * CPU_CLOCK_SPEED;
+
+		
+		client_info->sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		if(client_info->sockfd < 0)
+		{
+			perror("Error creating socket\n");
+			return;
+		}
+
+		printf("\nSending CPU cycles to Coordinator at IP %s\n", CYCLES_COORDINATOR);
+		
+		memset(&client_info->serveraddr, 0, sizeof(client_info->serveraddr));
+		client_info->serveraddr.sin_family = AF_INET;
+		client_info->serveraddr.sin_addr.s_addr = inet_addr(CYCLES_COORDINATOR);
+		client_info->serveraddr.sin_port = htons(CYCLES_COORDINATOR_PORT); 
+
+		ret = connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr)); 
+
+		if(ret) {
+			close(client_info->sockfd);
+			return;
+		}
+		printf("Sending CPU Cycles of %Lf from time passed of %Lf\n", cycles_to_send, (long double)time_passed / CLOCKS_PER_SEC);
+
+		bzero(client_info->sendline, LARGEST_MATRIX_SIZE);
+		size = sprintf(client_info->sendline, "%Lf", cycles_to_send);
+
+		// form the message and send it
+		ret = write(client_info->sockfd, client_info->sendline, size);
+
+		if(ret <= 0) {
+			fprintf(stderr, "Error: wrote %d bytes to coordinator\n", ret);
+		}
+
+		printf("Sent Cycles!\n\n");
+
+		close(client_info->sockfd);
+
+
+		client_info->initial_time = new_time;
+		client_info->last_cpu_send_time = getTime();
+	}
+}
 
 int getRandomNumber(int bound) {
 	int rand_num;
@@ -299,6 +361,8 @@ void createClient(client_struct *client_info) {
 	client_info->coordinator_return->out_matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 	client_info->known_coordinator = 0;
 	client_info->last_poll_time = 0;
+	client_info->last_cpu_send_time = 0;
+	client_info->initial_time = clock();
 	client_info->num_coordinators = NUM_COORDINATORS;
 	client_info->recvline = (char*)malloc(sizeof(char) * LARGEST_MATRIX_SIZE);
 	client_info->sendline = (char*)malloc(sizeof(char) * LARGEST_MATRIX_SIZE);

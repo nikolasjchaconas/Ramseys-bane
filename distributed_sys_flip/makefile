@@ -3,7 +3,7 @@ HOST=`hostname`
 
 all: clique 
 
-clique:  thread.o clique-count.o greedyGraphPermute.o distributed_flip.o client_protocol/client.o matrix.o
+clique:  thread.o clique-count.o greedyGraphPermute.o distributed_flip.o client_protocol/client.o matrix.o getcpuclockspeed.o
 	$(CC) -pthread -o $@ $^ -lm
 
 run: 

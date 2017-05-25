@@ -16,6 +16,8 @@
 
 #define LARGEST_MATRIX_SIZE 1024*1024
 
+extern long double CPU_CLOCK_SPEED;
+
 typedef struct _coordinator_struct {
 	int *out_matrix;
 	int counter_number;
@@ -28,11 +30,14 @@ typedef struct _client_struct {
 	int num_coordinators;
 	char **coordinator_ips;
 	int *coordinator_ports;
+	int id;
 	int sockfd;
 	struct sockaddr_in serveraddr;
 	char *recvline;
 	char *sendline;
 	double last_poll_time;
+	double last_cpu_send_time;
+	clock_t initial_time;
 	coordinator_struct *coordinator_return;
 } client_struct;
 
@@ -41,6 +46,7 @@ int getRandomNumber(int bound);
 
 int readCoordinatorMessage(int counter_number, client_struct *client_info);
 int connectToCoordinator();
+void sendCPUCycles(client_struct *client_info);
 int sendCounterExampleToCoordinator(int counter_number, int clique_count, int index, int* matrix, client_struct *client_info);
 int pollCoordinator(int counter_number, int clique_count, int index, int* matrix, client_struct *client_info);
 int numDigits(int num);

@@ -7,10 +7,12 @@
 #include "client_protocol/client.h"
 #include "matrix.h"
 #include "limits.h"
+#include "getcpuclockspeed.h"
 
 int NUM_THREADS;
 int bestCliqueCount = INT_MAX;
 int bestNodeCount = 0;
+long double CPU_CLOCK_SPEED;
 
 pthread_rwlock_t bestCliqueCountMutex;
 
@@ -135,6 +137,7 @@ void *findCounterExample(void* args){
 		}
 
 		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 1, graph, client_info);
+		sendCPUCycles(client_info);
 
 		if(coordinator_node_count >= nodeCount) {
 			index = coordinator_return->index;	
@@ -216,11 +219,16 @@ int main (int argc, char *argv[]){
 	srand(time(NULL));
 	pthread_rwlock_init(&bestCliqueCountMutex, NULL);
 
+	CPU_CLOCK_SPEED = get_cpu_clock_speed();
+	if(CPU_CLOCK_SPEED == 0) CPU_CLOCK_SPEED = 2600000000;
+
+	printf("CPU CLOCK SPEED IS: %Lf\n", CPU_CLOCK_SPEED);
 	for(t=0; t<NUM_THREADS; t++){
 		// int nodeCount, int* graph, const int index
 		printf("In main: creating thread %d\n", t);
 
 		client_info = (client_struct*)malloc(sizeof(client_struct));
+		client_info->id = t;
 		client_info->coordinator_return = (coordinator_struct*)malloc(sizeof(coordinator_struct));
 		createClient(client_info);
 
