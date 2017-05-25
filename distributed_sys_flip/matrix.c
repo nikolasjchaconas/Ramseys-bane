@@ -26,55 +26,6 @@ int getRandomIndex(int width) {
 }
 
 void permuteLastColumn(int* graph, const int nodeCount){
-	const int totalTypeOneEdgesToPlace = (nodeCount - 1) / 2;
-	const int lastCol = nodeCount - 1;
-	int edgesPlaced = 0;
-
-	while(edgesPlaced < totalTypeOneEdgesToPlace){
-		const int randRow = rand() % (nodeCount-1);
-		const int index = randRow * nodeCount + lastCol;
-		if(graph[index] == 0){
-			graph[index] = 1;
-			edgesPlaced++;
-		}
-	}
-}
-
-void copyMatrix(int* oldGraph, const int oldNodeCount, int* newGraph, const int newNodeCount){
-	int row;
-	int col;
-	int i;
-	//Set new graph to all zeros
-	for(i = 0; i < newNodeCount*newNodeCount; i++){
-		newGraph[i] = 0;
-	}
-
-	//Copy over the old matrix
-	for(row = 0; row < oldNodeCount; row++){
-		for(col = 0; col < oldNodeCount; col++){
-			int index = row * oldNodeCount + col;
-			newGraph[index] = oldGraph[index];
-		}
-	}
-}
-
-// void copyMatrix(int *smaller, int smaller_width, int *larger, int larger_width) {
-// 	int start;
-// 	int value;
-// 	int i;
-// 	int j;
-//
-// 	start = 2;
-// 	for(i = 0; i < larger_width - 2; i++) {
-// 		for(j = start; j < larger_width; j++) {
-// 			value = get(i, j - 2, smaller, smaller_width);
-// 			set(i, j, larger, larger_width, value);
-// 		}
-// 		start++;
-// 	}
-// }
-
-void permuteLastColumn(int* graph, const int nodeCount){
     const int totalTypeOneEdgesToPlace = floor((nodeCount - 1) / 2);
     int edgesPlaced = 0;
     while(edgesPlaced < totalTypeOneEdgesToPlace){
