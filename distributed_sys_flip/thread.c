@@ -72,14 +72,14 @@ void initIndexQueue(int* indexQueue, int* graph, const int indexQueueSize, const
 	int index;
 	int indexQueueNr = 0;
 	for(index = 0; index < adjMatrixSize; index++){
-	if(graph[index] == 1){
-		indexQueue[indexQueueNr] = index;
-		indexQueueNr++;
-	}
+		if(graph[index] == 1){
+			indexQueue[indexQueueNr] = index;
+			indexQueueNr++;
+		}
 	}
 }
 
-void sendCliqueZero(int *graph, int *nodeCount, client_struct *client_info){
+int sendCliqueZero(int *graph, int *nodeCount, client_struct *client_info){
 	printf("Found Counter Example for %d!\n", *nodeCount);
 
 	int received_number = sendCounterExampleToCoordinator(*nodeCount, 0, 0, graph, client_info);
@@ -91,10 +91,12 @@ void sendCliqueZero(int *graph, int *nodeCount, client_struct *client_info){
 	bestNodeCount = *nodeCount;
 	bestCliqueCount = client_info->coordinator_return->clique_count;
 	pthread_rwlock_unlock(&bestCliqueCountMutex);
+	return client_info->coordinator_return->clique_count;
 }
 
 void *findCounterExample(void* args){
 	int *graph;
+	int *temp;
 	int nodeCount;
 	int cliqueCount;
 	int index;
@@ -104,6 +106,7 @@ void *findCounterExample(void* args){
 	int coordinator_node_count;
 	int received_number;
 	int random_explore_phase = 0;
+	int permute_embedded = 0;
 	int embedded = 0;
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
@@ -113,14 +116,20 @@ void *findCounterExample(void* args){
 	coordinator_return = client_info->coordinator_return;
 
 	graph = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
+	temp = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 	bzero(graph, LARGEST_MATRIX_SIZE);
+	bzero(temp, LARGEST_MATRIX_SIZE);
 
 	initialize_50_50(graph, nodeCount);
+	cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
+
 	printf("Beginning search on node count of %d\n", nodeCount);
 
 	for(; nodeCount < 1000; ) {
 		//only done when indices exhausted
 		if(random_explore_phase) {
+			random_explore_phase = 0;
+			
 			printf("Beginning Random explore phase on node count %d\n", nodeCount);
 			//printGraph(graph, nodeCount);
 
@@ -132,8 +141,42 @@ void *findCounterExample(void* args){
 					break;
 				}
 			}
-		} else {
+		} else if (permute_embedded) {
+			int try_permute_clique;
+			permute_embedded = 0;
+
+			//embed counter example into next index in graph and temp
+			bzero(graph, LARGEST_MATRIX_SIZE);
+			bzero(temp, LARGEST_MATRIX_SIZE);
+			copyMatrix(coordinator_return->out_matrix, nodeCount - 1, graph, nodeCount);
+			copyMatrix(coordinator_return->out_matrix, nodeCount - 1, temp, nodeCount);
+
+			printf("\nTrying to embed %dx%d graph into %dx%d graph\n", nodeCount-1,nodeCount-1, nodeCount,nodeCount);
+			permuteLastColumn(graph, nodeCount);
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
+			printf("Embedding got %d\n", cliqueCount);
+
+			for(i = 0; i < 10; i++) {
+				permuteLastColumn(temp, nodeCount);
+				try_permute_clique = CliqueCount(temp, nodeCount, INT_MAX);
+				printf("Embedding got %d\n", try_permute_clique);
+
+				if(try_permute_clique < cliqueCount) {
+					copyGraph(temp, graph, nodeCount);
+					cliqueCount = try_permute_clique;
+					printf("New best embedding is %d\n", cliqueCount);
+				}
+
+				if(cliqueCount == 0) {
+					printf("WOW permuting a clique count of zero, bravo!\n");
+					break;
+				}
+
+				// reset temp and try again
+				bzero(temp, LARGEST_MATRIX_SIZE);
+				copyMatrix(coordinator_return->out_matrix, nodeCount - 1, temp, nodeCount);
+			}
+			printf("\nEmbedding ended with cliqueCount of %d\n", cliqueCount);
 		}
 
 		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 1, graph, client_info);
@@ -154,24 +197,16 @@ void *findCounterExample(void* args){
 				printf("Embedding counter example %d into %dx%d graph\n", nodeCount, nodeCount + 1, nodeCount + 1);
 				nodeCount++;
 				
-				//embed counter example into next index
-				bzero(graph, LARGEST_MATRIX_SIZE);
-				copyMatrix(coordinator_return->out_matrix, nodeCount - 1, graph, nodeCount);
-				permuteLastColumn(graph, nodeCount);
-
-				cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
-				random_explore_phase = 0;
+				permute_embedded = 1;
 				continue;
 			} else if(index == -1) {
 				cliqueCount = INT_MAX;
-				//we've exhausted indeces		
+				//we've exhausted indeces
 				random_explore_phase = 1;
-				// continue to random phase
 				continue;
 			} else {
 				printf("Solving Counter Example %d at index %d\n", nodeCount, index);
 				copyGraph(client_info->coordinator_return->out_matrix, graph, nodeCount);
-				random_explore_phase = 0;
 			}
 			printf("Continuing to Greedy Index Permute\n");
 		} else {
@@ -185,12 +220,10 @@ void *findCounterExample(void* args){
 		printf("best clique count is %d and old clique count is %d\n", bestCliqueCount, cliqueCount);
 		if(cliqueCount == 0) {
 			// send example to coordinator
-			sendCliqueZero(graph, &nodeCount, client_info);
-			// begin random explore phase
-			random_explore_phase = 0;
-		} else {
-			// request another index from coordinator
-			random_explore_phase = 0;
+			int ret = sendCliqueZero(graph, &nodeCount, client_info);
+			if(ret == 0) {
+				permute_embedded = 1;
+			}
 		}
 		pthread_rwlock_unlock(&bestCliqueCountMutex);
 
