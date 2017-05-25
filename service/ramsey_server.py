@@ -285,7 +285,7 @@ class RamseyServer():
         reply = str(counterNum) + ':' + str(cliqueCnt) 
         reply +=  ':' + str(newIndex) + ':' + bestGraph
 
-        self.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
+        #self.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
         conn.send(reply)
         time.sleep(2)
         conn.close()
@@ -369,7 +369,7 @@ class RamseyServer():
             self.logger.debug(e)
             self.logger.debug('Some error while writing to file! Ignoring it!')
 
-        
+
     def postOnSlack(self):
         
         currNum, graph = self.getCurrCounterNum(), self.getBestGraph()
@@ -414,8 +414,8 @@ class RamseyServer():
             while len(data) < dataSize:
                 data += conn.recv(BUFFER_SIZE)
 
-            self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
-                         
+            #self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
+
             self.srvr.handleNewCounterExample(conn, data)
 
             '''Kill the thread after use'''
