@@ -323,6 +323,8 @@ class RamseyServer():
                 elif cliqueCnt < self.getBestCliqueCount():
                     ''' Found a graph with better clique count '''
                     self.updateState(counterNum, cliqueCnt, graph)
+                    logMsg = 'Found better clique count %d for counter number %d' %(cliqueCnt, counterNum)
+                    self.logger.debug(logMsg)
 
                 elif self.getBestCliqueCount() != 0 and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
                     '''No more index to distribute; accept any graph not same as old one'''
