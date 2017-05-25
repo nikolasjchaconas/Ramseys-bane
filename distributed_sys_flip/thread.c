@@ -101,7 +101,7 @@ void *findCounterExample(void* args){
 	int i;
 	int coordinator_node_count;
 	int received_number;
-	int random_explore_phase = 1;
+	int random_explore_phase = 0;
 	int embedded = 0;
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
@@ -156,27 +156,11 @@ void *findCounterExample(void* args){
 				
 				//embed counter example into next index
 				bzero(graph, LARGEST_MATRIX_SIZE);
-				//printf("OLD:\n");
-				//printGraph(coordinator_return->out_matrix, nodeCount - 1);
 				copyMatrix(coordinator_return->out_matrix, nodeCount - 1, graph, nodeCount);
-				//printf("NEW:\n");
-				//printGraph(graph, nodeCount);
+				permuteLastColumn(graph, nodeCount);
+
 				cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
-
-				if(cliqueCount <= -1) {
-					printf("\nAYYY embedding found a good clique count of %d for %d!\n", cliqueCount, nodeCount);
-					random_explore_phase = 0;
-				} else {
-					printf("\nEmbedding found a clique count of %d for %d, resetting matrix!\n", cliqueCount, nodeCount);
-					bzero(graph, LARGEST_MATRIX_SIZE);
-					initialize_50_50(graph, nodeCount);
-					random_explore_phase = 1;
-				}
-
-
-				// compare embedded graph to random explore phase
-				random_explore_phase = 1;
-				// continue to random phase
+				random_explore_phase = 0;
 				continue;
 			} else if(index == -1) {
 				cliqueCount = INT_MAX;
@@ -203,7 +187,7 @@ void *findCounterExample(void* args){
 			// send example to coordinator
 			sendCliqueZero(graph, &nodeCount, client_info);
 			// begin random explore phase
-			random_explore_phase = 1;
+			random_explore_phase = 0;
 		} else {
 			// request another index from coordinator
 			random_explore_phase = 0;

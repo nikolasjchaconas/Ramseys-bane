@@ -1,4 +1,5 @@
- // sgsize must be >= 5 && <= 10
+#include "clique-count.h"
+// sgsize must be >= 5 && <= 10
 int CliqueCount(int *g, int gsize, int currentClique)
 {
     int i;
@@ -38,7 +39,7 @@ int CliqueCount(int *g, int gsize, int currentClique)
 				{
 					if(sgsize <= 5) {
 						count++;
-						if(count > currentClique) return count;
+						 return count;
 					} else {
 				  		for(n=m+1;n<gsize-sgsize+6;n++)
 						{
@@ -51,7 +52,7 @@ int CliqueCount(int *g, int gsize, int currentClique)
 						    {
 							if(sgsize <= 6){
 						      count++;
-						      if(count > currentClique) return count;
+						       return count;
 							} else {
 						for(o=n+1;o<gsize-sgsize+7;o++){
 						  if
@@ -63,7 +64,7 @@ int CliqueCount(int *g, int gsize, int currentClique)
 					   (g[i*gsize+j] == g[n*gsize+o])) {
 						if(sgsize <= 7) {
 							count++;
-							if(count > currentClique) return count;
+							 return count;
 						} else {
 						for(p=o+1;p<gsize-sgsize+8;p++){
 						  if
@@ -76,7 +77,7 @@ int CliqueCount(int *g, int gsize, int currentClique)
 					   (g[i*gsize+j] == g[o*gsize+p])) {
 						if(sgsize <= 8) {
 							count++;
-							if(count > currentClique) return count;
+							 return count;
 						} else {
 						for(q=p+1;q<gsize-sgsize+9;q++){
 						  if
@@ -90,7 +91,7 @@ int CliqueCount(int *g, int gsize, int currentClique)
 					   (g[i*gsize+j] == g[p*gsize+q])) { 
 						if(sgsize <= 9) {
 							count++;
-							if(count > currentClique) return count;
+							 return count;
 						} else {
 					for(r=q+1;r<gsize-sgsize+10;r++){
 						  if
@@ -104,7 +105,6 @@ int CliqueCount(int *g, int gsize, int currentClique)
 					   (g[i*gsize+j] == g[p*gsize+r]) &&
 					   (g[i*gsize+j] == g[q*gsize+r])) { 
 							count++;
-							if(count > currentClique) return count;
 						}
 					   }
 						}
