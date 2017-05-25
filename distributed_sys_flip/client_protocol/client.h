@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <time.h>
 #include <signal.h>
 #include <netdb.h>
 #include <string.h>
