@@ -113,14 +113,11 @@ void *findCounterExample(void* args){
 	graph = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
 	bzero(graph, LARGEST_MATRIX_SIZE);
 
-	cliqueCount = INT_MAX;
-	coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 0, graph, client_info);
-	nodeCount = coordinator_node_count > nodeCount ? coordinator_node_count : nodeCount;
-
 	initialize_50_50(graph, nodeCount);
 	printf("Beginning search on node count of %d\n", nodeCount);
 
 	for(; nodeCount < 1000; ) {
+		//only done when indices exhausted
 		if(random_explore_phase) {
 			printf("Beginning Random explore phase on node count %d\n", nodeCount);
 			//printGraph(graph, nodeCount);

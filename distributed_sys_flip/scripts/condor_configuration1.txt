@@ -1,0 +1,13 @@
+universe = vanilla
+executable = clique
+arguments = 1
+request_cpus = 1
+
+output = clique1.out
+error = clique1.err
+log = clique1.log
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+queue 250

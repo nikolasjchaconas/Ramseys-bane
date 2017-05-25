@@ -1,10 +1,5 @@
 #!/bin/bash
-
-
-#ssh -o "StrictHostKeyChecking no" nikolas_chaconas@csil-01.cs.ucsb.edu 'bash -s 4' < './git_pull.sh' &
-
-# sleep 10
-for i in {1..48}
+for i in {1..36}
 do
 	if [ "$i" -lt 10 ]
 	then
@@ -12,16 +7,10 @@ do
 	else
 		j="$i"
 	fi
-	if [ "$i" -lt 29 ]
-	then
-		ssh -o "StrictHostKeyChecking no" nikolas_chaconas@linux$j.engr.ucsb.edu 'bash -s 4' < './deploy.sh' &
-		echo "Sent to linux$j.engr.ucsb.edu"
-	fi
-	if [ "$i" -lt 36 ]
-	then
-		ssh -o "StrictHostKeyChecking no" nikolas_chaconas@cstl-$j.cs.ucsb.edu 'bash -s 4' < './deploy.sh' &
-		echo "Sent to cstl-$j.cs.ucsb.edu"
-	fi
-	ssh -o "StrictHostKeyChecking no" nikolas_chaconas@csil-$j.cs.ucsb.edu 'bash -s 4' < './deploy.sh' &
-	echo "Sent to csil-$j.cs.ucsb.edu"
+
+	ssh -o "StrictHostKeyChecking no" nikolas_chaconas@cstl-$j.cs.ucsb.edu 'bash -s 4' < './deploy.sh' &
+	echo "Sent to cstl-$j.cs.ucsb.edu"
+	echo "Check it out here: ssh nikolas_chaconas@cstl-$j.cs.ucsb.edu"
 done
+
+echo "deployed to 36 cstl nodes"
