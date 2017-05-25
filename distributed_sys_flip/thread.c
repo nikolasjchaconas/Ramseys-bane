@@ -129,7 +129,7 @@ void *findCounterExample(void* args){
 		//only done when indices exhausted
 		if(random_explore_phase) {
 			random_explore_phase = 0;
-			
+
 			printf("Beginning Random explore phase on node count %d\n", nodeCount);
 			//printGraph(graph, nodeCount);
 
@@ -158,7 +158,7 @@ void *findCounterExample(void* args){
 
 			for(i = 0; i < 10; i++) {
 				permuteLastColumn(temp, nodeCount);
-				try_permute_clique = CliqueCount(temp, nodeCount, INT_MAX);
+				try_permute_clique = CliqueCount(temp, nodeCount, cliqueCount);
 				printf("Embedding got %d\n", try_permute_clique);
 
 				if(try_permute_clique < cliqueCount) {
