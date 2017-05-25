@@ -11,7 +11,6 @@ void set(int i, int j, int *matrix, int width, int value) {
 int getDiagonalIndex(int width) {
 	int rand_col;
 	int rand_row;
-
 	rand_col = (double)rand()/RAND_MAX * (width - 1) + 1;
 	rand_row = rand_col - 1;
 	return rand_row * width + rand_col;
@@ -26,20 +25,85 @@ int getRandomIndex(int width) {
 	return rand_row * width + rand_col;
 }
 
-void copyMatrix(int *smaller, int smaller_width, int *larger, int larger_width) {
-	int start;
-	int value;
-	int i;
-	int j;
+void permuteLastColumn(int* graph, const int nodeCount){
+	const int totalTypeOneEdgesToPlace = (nodeCount - 1) / 2;
+	const int lastCol = nodeCount - 1;
+	int edgesPlaced = 0;
 
-	start = 2;
-	for(i = 0; i < larger_width - 2; i++) {
-		for(j = start; j < larger_width; j++) {
-			value = get(i, j - 2, smaller, smaller_width);
-			set(i, j, larger, larger_width, value);
+	while(edgesPlaced < totalTypeOneEdgesToPlace){
+		const int randRow = rand() % (nodeCount-1);
+		const int index = randRow * nodeCount + lastCol;
+		if(graph[index] == 0){
+			graph[index] = 1;
+			edgesPlaced++;
 		}
-		start++;
 	}
+}
+
+void copyMatrix(int* oldGraph, const int oldNodeCount, int* newGraph, const int newNodeCount){
+	int row;
+	int col;
+	int i;
+	//Set new graph to all zeros
+	for(i = 0; i < newNodeCount*newNodeCount; i++){
+		newGraph[i] = 0;
+	}
+
+	//Copy over the old matrix
+	for(row = 0; row < oldNodeCount; row++){
+		for(col = 0; col < oldNodeCount; col++){
+			int index = row * oldNodeCount + col;
+			newGraph[index] = oldGraph[index];
+		}
+	}
+}
+
+// void copyMatrix(int *smaller, int smaller_width, int *larger, int larger_width) {
+// 	int start;
+// 	int value;
+// 	int i;
+// 	int j;
+//
+// 	start = 2;
+// 	for(i = 0; i < larger_width - 2; i++) {
+// 		for(j = start; j < larger_width; j++) {
+// 			value = get(i, j - 2, smaller, smaller_width);
+// 			set(i, j, larger, larger_width, value);
+// 		}
+// 		start++;
+// 	}
+// }
+
+void permuteLastColumn(int* graph, const int nodeCount){
+    const int totalTypeOneEdgesToPlace = floor((nodeCount - 1) / 2);
+    int edgesPlaced = 0;
+    while(edgesPlaced < totalTypeOneEdgesToPlace){
+        const int randRow = rand() % (nodeCount);
+        const int index = (randRow * nodeCount) - 1;
+        if(graph[index] == 0){
+            graph[index] = 1;
+            edgesPlaced++;
+        }
+    }
+}
+
+void copyMatrix(int* oldGraph, const int oldNodeCount, int* newGraph, const int newNodeCount){
+    int row;
+    int col;
+    int i;
+    //Set new graph to all zeros
+    for(i = 0; i < newNodeCount*newNodeCount; i++){
+        newGraph[i] = 0;
+    }
+
+    //Copy over the old matrix
+    for(row = 0; row < oldNodeCount; row++){
+        for(col = 0; col < oldNodeCount; col++){
+            int index = row * oldNodeCount + col;
+            int index2 = row * newNodeCount + col;
+            newGraph[index2] = oldGraph[index];
+        }
+    }
 }
 
 void writeToFile(FILE *fp, int *matrix, int counter_number, argStruct *arguments) {
@@ -52,7 +116,7 @@ void writeToFile(FILE *fp, int *matrix, int counter_number, argStruct *arguments
 	fprintf(fp, "%d 0", counter_number);
 
 	matrix_size = counter_number * counter_number;
-	
+
 	for(i = 0; i < counter_number; i++) {
 		fwrite("\n", 1, 1, fp);
 		for(j = 0; j < counter_number; j++) {
