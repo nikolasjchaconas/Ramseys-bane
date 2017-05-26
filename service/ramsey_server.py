@@ -287,7 +287,7 @@ class RamseyServer():
 
         #self.logger.debug('Reply message: %d, %d, %d' %(counterNum, cliqueCnt, newIndex))
         conn.send(reply)
-        time.sleep(2)
+        #time.sleep(2)
         conn.close()
 
 
