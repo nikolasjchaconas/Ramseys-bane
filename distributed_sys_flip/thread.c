@@ -213,8 +213,7 @@ void *findCounterExample(void* args){
 			continue;
 		}
 
-		int count = threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index, client_info);
-		cliqueCount = count > cliqueCount ? count : cliqueCount;
+		cliqueCount = threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index, client_info);
 
 		pthread_rwlock_rdlock(&bestCliqueCountMutex);
 		printf("best clique count is %d and old clique count is %d\n", bestCliqueCount, cliqueCount);

@@ -163,7 +163,7 @@ const int greedyIndexPermute(int* graph, const int nodeCount, const int cliqueCo
 // 	pthread_exit(NULL);
 // }
 
-int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int cliqueCount, const int index, client_struct *client_info){
+int threadedGreedyIndexPermute(int* graph, const int nodeCount, int cliqueCount, const int index, client_struct *client_info){
 	int newCliqueCount = cliqueCount;
 	if(graph[index] == 1 && nodeCount > 0 && cliqueCount >= 0 && index >= 0 && index < nodeCount*nodeCount){
 
@@ -227,9 +227,11 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int clique
 			if(newCliqueCount < cliqueCount){
 				printf("New bestCount is: %d\n", newCliqueCount);
 				pthread_rwlock_wrlock(&bestCliqueCountMutex);
-				bestCliqueCount = newCliqueCount;
+				if(bestCliqueCount < newCliqueCount)
+					bestCliqueCount = newCliqueCount;
 				copyGraph(graphCopy, graph, nodeCount);
 				pthread_rwlock_unlock(&bestCliqueCountMutex);
+				cliqueCount = newCliqueCount;
 				break;
 			}
 			switchEdges(graphCopy, index, nextZeroIndex);
@@ -241,7 +243,8 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int clique
 	else{
 		printf("Error in greedyIndexPermute. Got the index: %d. It is pointing to the value: %d in the graph. The inputs were nodeCount: %d, cliqueCount: %d. PermuteEdge will not be performed.\n", index, graph[index], nodeCount, cliqueCount);
 	}
-	return newCliqueCount;
+
+	return cliqueCount;
 }
 
 const int greedyRowPermute(int* graph, const int nodeCount, const int cliqueCount, const int row){
