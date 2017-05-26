@@ -156,7 +156,7 @@ void *findCounterExample(void* args){
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 			printf("T%d: Embedding got %d\n", client_info->id, cliqueCount);
 
-			for(i = 0; i < 10; i++) {
+			for(i = 0; i < 20; i++) {
 				permuteLastColumn(temp, nodeCount);
 				try_permute_clique = CliqueCount(temp, nodeCount, cliqueCount);
 				printf("T%d: Embedding got %d\n", client_info->id, try_permute_clique);
@@ -176,7 +176,7 @@ void *findCounterExample(void* args){
 				bzero(temp, LARGEST_MATRIX_SIZE);
 				copyMatrix(coordinator_return->out_matrix, nodeCount - 1, temp, nodeCount);
 			}
-			printf("T%d: \nEmbedding ended with cliqueCount of %d\n", client_info->id, cliqueCount);
+			printf("\nT%d: Embedding ended with cliqueCount of %d\n", client_info->id, cliqueCount);
 		}
 
 		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 1, graph, client_info);
