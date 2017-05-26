@@ -205,13 +205,13 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, int cliqueCount,
 				sendCPUCycles(client_info);
 
 				if(client_info->coordinator_return->clique_count < cliqueCount) {
-					printf("T%d: Coordinator has better cliquecount available! Exiting greedy...\n", client_info->id);
+					printf("\nT%d: Coordinator has better cliquecount available! Exiting greedy...\n", client_info->id);
 					pthread_rwlock_rdlock(&bestCliqueCountMutex);
 					bestCliqueCount = client_info->coordinator_return->clique_count;
 					pthread_rwlock_unlock(&bestCliqueCountMutex);
 					return cliqueCount;
 				} else if(client_info->coordinator_return->counter_number > nodeCount) {
-					printf("T%d: Coordinator has better nodeCount available! Exiting greedy...\n", client_info->id);
+					printf("\nT%d: Coordinator has better nodeCount available! Exiting greedy...\n", client_info->id);
 					pthread_rwlock_rdlock(&bestCliqueCountMutex);
 					bestNodeCount = client_info->coordinator_return->counter_number;
 					pthread_rwlock_unlock(&bestCliqueCountMutex);
