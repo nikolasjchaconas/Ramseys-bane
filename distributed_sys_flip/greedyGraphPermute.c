@@ -183,7 +183,7 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int clique
 		int col = row + 1;
 		int nextZeroIndex = (row * nodeCount) + col;
 		int flips = 0;
-		int flipThreshold = 3;
+		int flipThreshold = 5;
 		while(nextZeroIndex < lastZeroIndex){
 			pthread_rwlock_rdlock(&bestCliqueCountMutex);
 			if(bestNodeCount > nodeCount) {
@@ -203,7 +203,7 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, const int clique
 				sendCounterExampleToCoordinator(nodeCount, cliqueCount, 0, graph, client_info);
 				// try sending CPU
 				sendCPUCycles(client_info);
-				
+
 				if(client_info->coordinator_return->clique_count < cliqueCount) {
 					printf("Coordinator has better cliquecount available! Exiting greedy...\n");
 					pthread_rwlock_rdlock(&bestCliqueCountMutex);
