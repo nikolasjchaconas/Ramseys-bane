@@ -17,6 +17,8 @@ void copyMatrix(int* oldGraph, const int oldNodeCount, int* newGraph, const int 
 
 void permuteLastColumn(int* graph, const int nodeCount);
 
+void wipeLastColumn(int* graph, const int nodeCount);
+
 //void writeToFile(FILE *fp, int *matrix, int counter_number, argStruct *arguments);
 
 #endif

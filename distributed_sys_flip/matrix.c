@@ -25,6 +25,14 @@ int getRandomIndex(int width) {
 	return rand_row * width + rand_col;
 }
 
+void wipeLastColumn(int* graph, const int nodeCount) {
+	int row;
+
+	for(row = 0; row < nodeCount; row ++) {
+		graph[row *nodeCount - 1] = 0;
+	}
+}
+
 void permuteLastColumn(int* graph, const int nodeCount){
     const int totalTypeOneEdgesToPlace = floor((nodeCount - 1) / 2);
     int edgesPlaced = 0;
