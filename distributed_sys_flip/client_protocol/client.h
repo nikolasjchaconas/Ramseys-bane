@@ -27,10 +27,6 @@ typedef struct _coordinator_struct {
 } coordinator_struct;
 
 typedef struct _client_struct {
-	int known_coordinator;
-	int num_coordinators;
-	char **coordinator_ips;
-	int *coordinator_ports;
 	int id;
 	int sockfd;
 	struct sockaddr_in serveraddr;
@@ -38,13 +34,14 @@ typedef struct _client_struct {
 	char *sendline;
 	double last_poll_time;
 	double last_cpu_send_time;
+	char load_balance_ip[100];
 	clock_t initial_time;
 	coordinator_struct *coordinator_return;
 } client_struct;
 
 
 int getRandomNumber(int bound);
-
+int dns_to_ip(char *hostname , char* ip);
 int readCoordinatorMessage(int counter_number, client_struct *client_info);
 int connectToCoordinator();
 void sendCPUCycles(client_struct *client_info);

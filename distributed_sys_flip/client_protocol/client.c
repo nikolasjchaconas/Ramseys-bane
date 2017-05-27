@@ -1,19 +1,32 @@
 #include "client.h"
 
-#define COORDINATOR1_IP "169.231.235.33"
-#define COORDINATOR2_IP "169.231.235.124"
-#define COORDINATOR3_IP "169.231.235.86"
-#define COORDINATOR4_IP "169.231.235.115"
-#define COORDINATOR5_IP "169.231.235.97"
-
 #define CYCLES_COORDINATOR "169.231.235.58"
 #define CYCLES_COORDINATOR_PORT 5002
 
-#define NUM_COORDINATORS 5
 #define COORDINATOR_PORT 5001
 
 double poll_interval_seconds = 180;
 double send_cpu_interval_seconds = 300;
+
+int dns_to_ip(char *hostname , char* ip)
+{
+	struct hostent *host_struct;
+	struct in_addr **addr_list;
+	int i;
+	host_struct = gethostbyname(hostname);
+
+	if (host_struct == NULL) 
+	{
+		// get the host info
+		perror("gethostname:");
+		return -1;
+	}
+ 
+	addr_list = (struct in_addr **) host_struct->h_addr_list;
+	 
+	strcpy(ip , inet_ntoa(*addr_list[0]) );
+	return 1;
+}
 
 void sendCPUCycles(client_struct *client_info) {
 	double time_waited;
@@ -60,7 +73,7 @@ void sendCPUCycles(client_struct *client_info) {
 		ret = write(client_info->sockfd, client_info->sendline, size);
 
 		if(ret <= 0) {
-			fprintf(stderr, "Error: wrote %d bytes to coordinator\n", ret);
+			fprintf(stderr, "Error: wrote %d bytes to Load Balancer\n", ret);
 		}
 
 		printf("Sent Cycles!\n\n");
@@ -173,7 +186,7 @@ int readCoordinatorMessage(int counter_number, client_struct *client_info) {
 	}
 	// printf("received LINE: %s\n\n", client_info->recvline);
 
-	printf("Received From Coordinator: counter num: %d, clique count: %d, index: %d\n", client_info->coordinator_return->counter_number, client_info->coordinator_return->clique_count, client_info->coordinator_return->index);
+	printf("Received From Load Balancer: counter num: %d, clique count: %d, index: %d\n", client_info->coordinator_return->counter_number, client_info->coordinator_return->clique_count, client_info->coordinator_return->index);
 
 	return client_info->coordinator_return->counter_number;
 }
@@ -228,7 +241,7 @@ int sendCounterExampleToCoordinator(int counter_number, int clique_count, int in
 		close(client_info->sockfd);
 		return -1;
 	}
-	printf("Sending to Coordinator: counter num: %d, clique count: %d, index: %d\n", counter_number, clique_count, index);
+	printf("Sending to Load Balancer: counter num: %d, clique count: %d, index: %d\n", counter_number, clique_count, index);
 	counter_digits = numDigits(counter_number);
 	clique_digits = numDigits(clique_count);
 	index_digits = numDigits(index);
@@ -257,13 +270,12 @@ int sendCounterExampleToCoordinator(int counter_number, int clique_count, int in
 	ret = write(client_info->sockfd, client_info->sendline, size);
 
 	if(ret <= 0) {
-		fprintf(stderr, "Error: wrote %d bytes to coordinator\n", ret);
+		fprintf(stderr, "Error: wrote %d bytes to Load Balancer\n", ret);
 	}
 	// printf("wrote out %d bytes to server: %s\n", ret, buffer);
 
 	//out_matrix will contain currrent counter example
 	ret = readCoordinatorMessage(counter_number, client_info);
-	printf("Read from the Coordinator\n");
 
 	if(ret < 0) {
 		printf("error\n");
@@ -272,27 +284,15 @@ int sendCounterExampleToCoordinator(int counter_number, int clique_count, int in
 	close(client_info->sockfd);
 
 	return ret;
-
-
-	// may use this later
-		// ret = getsockopt (client_info->socket_fd, SOL_SOCKET, SO_ERROR, &error, &len);
-
-	// if(ret != 0) {
-	// 	fprintf(stderr, "error\n");
-	// 	connectToCoordinator();
-	// }
-	// else if(error != 0) {
-	// 	fprintf(stderr, "error\n");
-	// 	connectToCoordinator();
-	// }
 }
 
 int connectToCoordinator(client_struct *client_info) {
 	int i;
-	int coordinator;
 	int ret;
-
 	
+	dns_to_ip("CoordinatorLoadBalancer-000988402024.lb.cloud.aristotle.ucsb.edu", client_info->load_balance_ip);
+
+
 	client_info->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(client_info->sockfd < 0)
 	{
@@ -300,87 +300,33 @@ int connectToCoordinator(client_struct *client_info) {
 		return 1;
 	}
 
-	//try to connect to random coordinator
-	coordinator = getRandomNumber(client_info->num_coordinators);
-
-	printf("Connecting to Coordinator %d at IP %s\n", 1 + coordinator, client_info->coordinator_ips[coordinator]);
+	printf("Connecting to Load Balancer at IP %s\n", client_info->load_balance_ip);
 	
 	memset(&client_info->serveraddr, 0, sizeof(client_info->serveraddr));
 	client_info->serveraddr.sin_family = AF_INET;
-	client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->coordinator_ips[coordinator]);
-	client_info->serveraddr.sin_port = htons(client_info->coordinator_ports[coordinator]); 
+	client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->load_balance_ip);
+	client_info->serveraddr.sin_port = htons(COORDINATOR_PORT); 
 
 	ret = connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr)); 
 
-	if (ret == 0) {
-		client_info->known_coordinator = coordinator;
-	} else {
-		printf("Connection Failed to Coordinator %d\n", coordinator + 1);
+	if (ret != 0) {
+		close(client_info->sockfd);
+		printf("Connection Failed to Load Balancer at IP %s\n", client_info->load_balance_ip);
 		perror("ERROR1");
-		for(i = 0; i < client_info->num_coordinators; i++) {
-			if(i != coordinator) {
-				close(client_info->sockfd);
-				client_info->sockfd = socket(AF_INET, SOCK_STREAM, 0);
-				if(client_info->sockfd < 0)
-				{
-					perror("Error creating socket\n");
-					return 1;
-				}
-				printf("Connecting to Coordinator %d at IP %s\n", 1 + i, client_info->coordinator_ips[i]);
-
-				memset(&client_info->serveraddr, 0, sizeof(client_info->serveraddr));
-				client_info->serveraddr.sin_family = AF_INET;
-				client_info->serveraddr.sin_addr.s_addr = inet_addr(client_info->coordinator_ips[i]);
-				client_info->serveraddr.sin_port = htons(client_info->coordinator_ports[i]); 
-
-				ret = connect(client_info->sockfd, (struct sockaddr *)&client_info->serveraddr, sizeof(client_info->serveraddr));
-
-				if (ret == 0){
-					client_info->known_coordinator = i;
-					break;
-				} else {
-					printf("Connection Failed to Coordinator %d\n", i + 1);
-					perror("ERROR2");
-				}
-			}
-		}
-	}
-
-	
-
-	if(i == client_info->num_coordinators) {
 		return 1;
 	}
 
-	printf("Connected to Coordinator %d at IP %s\n", client_info->known_coordinator + 1, client_info->coordinator_ips[client_info->known_coordinator]);
+	printf("Connected to Load Balancer at IP %s\n", client_info->load_balance_ip);
 	return 0;
 }
 
 void createClient(client_struct *client_info) {
 	printf("Creating Client...\n\n");
 	client_info->coordinator_return->out_matrix = (int *)malloc(sizeof(int) * LARGEST_MATRIX_SIZE);
-	client_info->known_coordinator = 0;
 	client_info->last_poll_time = 0;
 	client_info->last_cpu_send_time = 0;
 	client_info->initial_time = clock();
-	client_info->num_coordinators = NUM_COORDINATORS;
 	client_info->recvline = (char*)malloc(sizeof(char) * LARGEST_MATRIX_SIZE);
 	client_info->sendline = (char*)malloc(sizeof(char) * LARGEST_MATRIX_SIZE);
-	client_info->coordinator_ips = (char **)malloc(sizeof(char*) * client_info->num_coordinators);
-	client_info->coordinator_ips[0] = (char *)malloc(strlen(COORDINATOR1_IP) + 1);
-	client_info->coordinator_ips[1] = (char *)malloc(strlen(COORDINATOR2_IP) + 1);
-	client_info->coordinator_ips[2] = (char *)malloc(strlen(COORDINATOR3_IP) + 1);
-	client_info->coordinator_ips[3] = (char *)malloc(strlen(COORDINATOR4_IP) + 1);
-	client_info->coordinator_ips[4] = (char *)malloc(strlen(COORDINATOR5_IP) + 1);
-	strcpy(client_info->coordinator_ips[0], COORDINATOR1_IP);
-	strcpy(client_info->coordinator_ips[1], COORDINATOR2_IP);
-	strcpy(client_info->coordinator_ips[2], COORDINATOR3_IP);
-	strcpy(client_info->coordinator_ips[3], COORDINATOR4_IP);
-	strcpy(client_info->coordinator_ips[4], COORDINATOR5_IP);
-	client_info->coordinator_ports = (int *)malloc(sizeof(int) * client_info->num_coordinators);
-	client_info->coordinator_ports[0] = COORDINATOR_PORT;
-	client_info->coordinator_ports[1] = COORDINATOR_PORT;
-	client_info->coordinator_ports[2] = COORDINATOR_PORT;
-	client_info->coordinator_ports[3] = COORDINATOR_PORT;
-	client_info->coordinator_ports[4] = COORDINATOR_PORT;
+	bzero(client_info->load_balance_ip, 0);
 }
