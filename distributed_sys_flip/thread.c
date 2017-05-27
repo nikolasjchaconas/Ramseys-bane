@@ -156,7 +156,7 @@ void *findCounterExample(void* args){
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 			printf("T%d: Embedding got %d\n", client_info->id, cliqueCount);
 
-			for(i = 0; i < 40; i++) {
+			for(i = 0; i < nodeCount/5; i++) {
 				permuteLastColumn(temp, nodeCount);
 				try_permute_clique = CliqueCount(temp, nodeCount, cliqueCount);
 				printf("T%d: Embedding got %d\n", client_info->id, try_permute_clique);
