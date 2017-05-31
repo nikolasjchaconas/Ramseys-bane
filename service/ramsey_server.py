@@ -20,7 +20,7 @@ COUNTER_EX_TABLE = 'counter_examples'
 BUFFER_SIZE = 1024*1024
 COUNTER_EX_DIR = 'counter_examples'
 MAX_CLIQUE_CNT = 999
-NO_OF_SERVERS = 5
+NO_OF_SERVERS = 7
 
 ######################################################
 
