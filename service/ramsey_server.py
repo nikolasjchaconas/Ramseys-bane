@@ -407,6 +407,9 @@ class RamseyServer():
             
             conn, recvMsg = self.conn, ''
             data = conn.recv(BUFFER_SIZE)
+            if not data or data == '':
+                conn.close()
+                sys.exit()
 
             counterNum, cliqueCnt, index, _ = data.split(':')
 
