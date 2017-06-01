@@ -5,7 +5,7 @@ import threading
 import json, sys
 import logging
 import random
-from db_store import DBStore
+#from db_store import DBStore
 from subprocess import call
 import os
 import copy
@@ -24,7 +24,7 @@ STATS_FILE = 'stats.log'
 class StatsServer():
     def __init__(self, svrId):
         self.svrId = svrId
-        self.stats = 0
+        self.stats = 0.0
         self.lock = threading.Lock()
         svrInfo= {'svr_name':self.svrId.upper()}
         self.logger = self.logFormatter(svrInfo)
@@ -53,7 +53,8 @@ class StatsServer():
 
     def handleNewStatsInfo(self, conn, msg):
 
-        newStats = int(msg.split(':')[1])
+        newStats = float(msg)
+        newStats /= 1000000000.0
         self.lock.acquire()
         try:
             self.stats += newStats
@@ -72,7 +73,7 @@ class StatsServer():
             if not os.path.exists(STATS_DIR):
                 os.makedirs(STATS_DIR)
             f= open(STATS_DIR + '/' + STATS_FILE, 'a+')
-            f.write("Total cycles burned is: " + str(self.stats))
+            f.write("Total cycles burned is: " + str(self.stats) + "\n")
             f.close()
         except Exception as e:
             self.logger.debug(e)
@@ -118,7 +119,7 @@ class StatsServer():
             # while len(data) < dataSize:
             #     data += conn.recv(BUFFER_SIZE)
 
-            #self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
+            self.srvr.logger.debug('Received message: ' + data )
 
             self.srvr.handleNewStatsInfo(conn, data)
 
