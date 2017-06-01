@@ -407,7 +407,7 @@ class RamseyServer():
             
             conn, recvMsg = self.conn, ''
             data = conn.recv(BUFFER_SIZE)
-            if not data or data == '':
+            if not data or (len(data) <= 0):
                 conn.close()
                 sys.exit()
 
