@@ -407,12 +407,13 @@ class RamseyServer():
             
             conn, recvMsg = self.conn, ''
             data = conn.recv(BUFFER_SIZE)
-            if not data or (len(data) <= 0):
+
+            try:
+                counterNum, cliqueCnt, index, _ = data.split(':')
+            except Exception as e:
                 conn.close()
                 sys.exit()
-
-            counterNum, cliqueCnt, index, _ = data.split(':')
-
+            
             '''The msg will be ==> counter_num:clique_count:index:matrix'''
             dataSize = len(counterNum) + len(cliqueCnt) + len(index) + int(counterNum)*int(counterNum) + 3
             
