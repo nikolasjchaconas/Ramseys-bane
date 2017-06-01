@@ -11,3 +11,4 @@ condor_submit condor_configuration1.txt
 condor_submit condor_configuration2.txt
 condor_submit condor_configuration3.txt
 condor_submit condor_configuration4.txt
+condor_submit condor_configuration5.txt

@@ -1,7 +1,7 @@
 universe = vanilla
 executable = clique
-arguments = 8
-request_cpus = 8
+arguments = 4
+request_cpus = 4
 
 output = clique1.out
 error = clique1.err

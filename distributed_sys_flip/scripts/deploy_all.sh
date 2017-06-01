@@ -27,6 +27,7 @@ scp condor_configuration1.txt cs293b-3@ucsbsubmit.chtc.wisc.edu:Ramseys-bane/dis
 scp condor_configuration2.txt cs293b-3@ucsbsubmit.chtc.wisc.edu:Ramseys-bane/distributed_sys_flip
 scp condor_configuration3.txt cs293b-3@ucsbsubmit.chtc.wisc.edu:Ramseys-bane/distributed_sys_flip
 scp condor_configuration4.txt cs293b-3@ucsbsubmit.chtc.wisc.edu:Ramseys-bane/distributed_sys_flip
+scp condor_configuration5.txt cs293b-3@ucsbsubmit.chtc.wisc.edu:Ramseys-bane/distributed_sys_flip
 
 ssh -o "StrictHostKeyChecking no" cs293b-3@ucsbsubmit.chtc.wisc.edu 'bash -s' < './deploy_condor.sh' &
 printf "Check it out here: \nssh cs293b-3@ucsbsubmit.chtc.wisc.edu\n\n"
