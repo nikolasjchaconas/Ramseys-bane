@@ -1,11 +1,11 @@
 #include "clique-count.h"
 
-int currentCliqueCount = 0;
+__thread int currentCliqueCount = 0;
 
 boolean validateCount(set_t s, graph_t *g, clique_options *opts){
   opts->clique_list_length++;
   //printf("COUNT IS: %i\n", opts->clique_list_length);
-  if(opts->clique_list_length >= currentCliqueCount){
+  if(opts->clique_list_length > currentCliqueCount){
     return FALSE;
   }
   return TRUE;
@@ -33,7 +33,7 @@ int CliqueCount(int* g, int gsize, int currentClique){
 
   int typeOneCount = clique_find_all(typeOne, 10, 10, FALSE, &ramseyCounterOpts);
   graph_free(typeOne);
-  if(typeOneCount >= currentClique){
+  if(typeOneCount > currentClique){
     return typeOneCount;
   }
   int typeZeroCount = clique_find_all(typeZero, 10, 10, FALSE, &ramseyCounterOpts);
