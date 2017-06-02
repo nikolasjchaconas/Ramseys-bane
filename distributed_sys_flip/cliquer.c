@@ -53,15 +53,15 @@ static __thread int temp_count=0;
 static __thread int entrance_level=0;  /* How many levels for entrance have occurred? */
 
 #define ENTRANCE_SAVE() \
-__thread int *old_clique_size = clique_size;                     \
-__thread set_t old_current_clique = current_clique;              \
-__thread set_t old_best_clique = best_clique;                    \
-__thread int old_clique_list_count = clique_list_count;          \
-__thread int old_weight_multiplier = weight_multiplier;          \
-__thread int **old_temp_list = temp_list;                        \
-__thread int old_temp_count = temp_count;                        \
-__thread struct tms old_cputimer;                                \
-__thread struct timeval old_realtimer;                           \
+int *old_clique_size = clique_size;                     \
+set_t old_current_clique = current_clique;              \
+set_t old_best_clique = best_clique;                    \
+int old_clique_list_count = clique_list_count;          \
+int old_weight_multiplier = weight_multiplier;          \
+int **old_temp_list = temp_list;                        \
+int old_temp_count = temp_count;                        \
+struct tms old_cputimer;                                \
+struct timeval old_realtimer;                           \
 memcpy(&old_cputimer,&cputimer,sizeof(struct tms));       \
 memcpy(&old_realtimer,&realtimer,sizeof(struct timeval));
 
