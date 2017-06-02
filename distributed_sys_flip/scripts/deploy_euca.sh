@@ -18,10 +18,6 @@ ssh -o "StrictHostKeyChecking no" -i ~/.ssh/coordinator_key.pem root@128.111.84.
 echo "Sent to root@128.111.84.203"
 printf "Check it out here: \nssh -i ~/.ssh/coordinator_key.pem root@128.111.84.203\n\n"
 
-ssh -o "StrictHostKeyChecking no" -i ~/.ssh/coordinator_key.pem root@128.111.84.231 'bash -s 1' < './deploy.sh' &
-echo "Sent to root@128.111.84.231"
-printf "Check it out here: \nssh -i ~/.ssh/coordinator_key.pem root@128.111.84.231\n\n"
-
 ssh -o "StrictHostKeyChecking no" -i ~/.ssh/coordinator_key.pem root@128.111.84.189 'bash -s 1' < './deploy.sh' &
 echo "Sent to root@128.111.84.189"
 printf "Check it out here: \nssh -i ~/.ssh/coordinator_key.pem root@128.111.84.189\n\n"
