@@ -1,0 +1,1 @@
+condor_rm cs293b-3
