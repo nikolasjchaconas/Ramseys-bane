@@ -57,7 +57,7 @@ void printGraph(int *graph, const int nodeCount){
 	printf("%d %d", nodeCount, cliqueCount);
 
 	adjMatrixSize = nodeCount * nodeCount;
-	
+
 	for(i = 0; i < nodeCount; i++) {
 	printf("\n");
 	for(j = 0; j < nodeCount; j++) {
@@ -68,7 +68,7 @@ void printGraph(int *graph, const int nodeCount){
 }
 
 void initIndexQueue(int* indexQueue, int* graph, const int indexQueueSize, const int adjMatrixSize){
-	bzero(indexQueue, indexQueueSize*sizeof(int)); 
+	bzero(indexQueue, indexQueueSize*sizeof(int));
 	int index;
 	int indexQueueNr = 0;
 	for(index = 0; index < adjMatrixSize; index++){
@@ -182,7 +182,7 @@ void *findCounterExample(void* args){
 		sendCPUCycles(client_info);
 
 		if(coordinator_node_count >= nodeCount) {
-			index = coordinator_return->index;	
+			index = coordinator_return->index;
 			nodeCount = coordinator_return->counter_number;
 			cliqueCount = coordinator_return->clique_count;
 
@@ -195,7 +195,7 @@ void *findCounterExample(void* args){
 			if(cliqueCount == 0) {
 				printf("T%d: Embedding counter example %d into %dx%d graph\n", client_info->id, nodeCount, nodeCount + 1, nodeCount + 1);
 				nodeCount++;
-				
+
 				permute_embedded = 1;
 				continue;
 			} else if(index == -1) {

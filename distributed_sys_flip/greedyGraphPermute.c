@@ -183,7 +183,7 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, int cliqueCount,
 		int col = row + 1;
 		int nextZeroIndex = (row * nodeCount) + col;
 		int flips = 0;
-		int flipThreshold = 5;
+		int flipThreshold = 100;
 		while(nextZeroIndex < lastZeroIndex){
 			pthread_rwlock_rdlock(&bestCliqueCountMutex);
 			if(bestNodeCount > nodeCount) {
