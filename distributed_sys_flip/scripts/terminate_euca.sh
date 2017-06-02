@@ -12,9 +12,6 @@ echo "Sent to root@128.111.84.218"
 ssh -o "StrictHostKeyChecking no" -i ~/.ssh/coordinator_key.pem root@128.111.84.203 'bash -s' < './terminate.sh' &
 echo "Sent to root@128.111.84.203"
 
-ssh -o "StrictHostKeyChecking no" -i ~/.ssh/coordinator_key.pem root@128.111.84.231 'bash -s' < './terminate.sh' &
-echo "Sent to root@128.111.84.231"
-
 ssh -o "StrictHostKeyChecking no" -i ~/.ssh/coordinator_key.pem root@128.111.84.189 'bash -s' < './terminate.sh' &
 echo "Sent to root@128.111.84.189"
 
