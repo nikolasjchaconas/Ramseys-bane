@@ -132,7 +132,8 @@ void *findCounterExample(void* args){
 
 			printf("T%d: Beginning Random explore phase on node count %d\n", client_info->id, nodeCount);
 			//printGraph(graph, nodeCount);
-
+			bzero(graph, LARGEST_MATRIX_SIZE);
+			initialize_50_50(graph, nodeCount);
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 			for(i = 0; i < nodeCount/5; i++) {
 				cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);
