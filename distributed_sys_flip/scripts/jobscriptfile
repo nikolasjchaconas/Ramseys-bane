@@ -2,7 +2,7 @@
 #SBATCH --job-name="clique"
 #SBATCH --output="clique.%j.%N.out"
 #SBATCH --partition=compute
-#SBATCH --nodes=72
+#SBATCH --nodes=10
 #SBATCH --ntasks-per-node=24
 #SBATCH --export=ALL
 #SBATCH -t 2:00:00
