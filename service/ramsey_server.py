@@ -310,31 +310,31 @@ class RamseyServer():
             self.logger.debug('Encountered error: %s' %e)
             return
 
-        try:
-            if counterNum == self.getCurrCounterNum():
-                if cliqueCnt == 0:
-                    '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
-                     So everyone should start working on the next counterNum. '''
+        
+        if counterNum == self.getCurrCounterNum():
+            if cliqueCnt == 0:
+                '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
+                 So everyone should start working on the next counterNum. '''
 
-                    '''Store the counter ex graph in DB; we don't care about index'''
-                    self.updateState(counterNum, cliqueCnt, graph)
-                    
-                    logMsg = 'Found counter example for: %d' %(counterNum)
-                    self.logger.debug(logMsg)
-                    self.postOnSlack()
-
-                elif cliqueCnt < self.getBestCliqueCount():
-                    ''' Found a graph with better clique count '''
-                    self.updateState(counterNum, cliqueCnt, graph)
-                    logMsg = 'Found better clique count %d for counter number %d' %(cliqueCnt, counterNum)
-                    self.logger.debug(logMsg)
-
-                elif self.getBestCliqueCount() != 0 and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
-                    '''No more index to distribute; accept any graph not same as old one'''
-                    self.updateState(counterNum, cliqueCnt, graph)
-
-            elif counterNum > self.getCurrCounterNum():
+                '''Store the counter ex graph in DB; we don't care about index'''
                 self.updateState(counterNum, cliqueCnt, graph)
+                
+                logMsg = 'Found counter example for: %d' %(counterNum)
+                self.logger.debug(logMsg)
+                self.postOnSlack()
+
+            elif cliqueCnt < self.getBestCliqueCount():
+                ''' Found a graph with better clique count '''
+                self.updateState(counterNum, cliqueCnt, graph)
+                logMsg = 'Found better clique count %d for counter number %d' %(cliqueCnt, counterNum)
+                self.logger.debug(logMsg)
+
+            elif self.getBestCliqueCount() != 0 and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
+                '''No more index to distribute; accept any graph not same as old one'''
+                self.updateState(counterNum, cliqueCnt, graph)
+
+        elif counterNum > self.getCurrCounterNum():
+            self.updateState(counterNum, cliqueCnt, graph)
 
         self.replyToClient(conn, clientIndex)
 
@@ -388,7 +388,7 @@ class RamseyServer():
             self.srvr = srvr
 
 
-    def runNewClientConn(self): 
+    def runNewClientConn(self, q): 
         items = q.get()
         conn, recvMsg = items[0], ''
         data = conn.recv(BUFFER_SIZE)
