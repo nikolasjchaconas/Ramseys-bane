@@ -398,6 +398,7 @@ class RamseyServer():
         except Exception as e:
             conn.close()
             q.task_done()
+            return
             #sys.exit()
         
         '''The msg will be ==> counter_num:clique_count:index:matrix'''
