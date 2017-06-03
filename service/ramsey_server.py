@@ -24,7 +24,6 @@ BUFFER_SIZE = 1024*1024
 COUNTER_EX_DIR = 'counter_examples'
 MAX_CLIQUE_CNT = 999
 NO_OF_SERVERS = 7
-NUM_OF_THREADS = 3000
 
 ######################################################
 
@@ -56,8 +55,8 @@ class RamseyServer():
 
 
     def loadConfig(self):
-    	with open('config.json') as config_file:    
-    		self.config = json.load(config_file)
+        with open('config.json') as config_file:    
+            self.config = json.load(config_file)
 
 
     def initDbConnection(self):
@@ -310,7 +309,6 @@ class RamseyServer():
             self.logger.debug('Encountered error: %s' %e)
             return
 
-        
         if counterNum == self.getCurrCounterNum():
             if cliqueCnt == 0:
                 '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
@@ -388,38 +386,33 @@ class RamseyServer():
             self.srvr = srvr
 
 
-    def runNewClientConn(self, q): 
-        items = q.get()
-        conn, recvMsg = items[0], ''
-        data = conn.recv(BUFFER_SIZE)
+        def run(self): 
+            
+            conn, recvMsg = self.conn, ''
+            data = conn.recv(BUFFER_SIZE)
 
-        try:
-            counterNum, cliqueCnt, index, _ = data.split(':')
-        except Exception as e:
-            conn.close()
-            q.task_done()
-            return
-            #sys.exit()
-        
-        '''The msg will be ==> counter_num:clique_count:index:matrix'''
-        dataSize = len(counterNum) + len(cliqueCnt) + len(index) + int(counterNum)*int(counterNum) + 3
-        
-        while len(data) < dataSize:
-            data += conn.recv(BUFFER_SIZE)
+            try:
+                counterNum, cliqueCnt, index, _ = data.split(':')
+            except Exception as e:
+                conn.close()
+                sys.exit()
+            
+            '''The msg will be ==> counter_num:clique_count:index:matrix'''
+            dataSize = len(counterNum) + len(cliqueCnt) + len(index) + int(counterNum)*int(counterNum) + 3
+            
+            while len(data) < dataSize:
+                data += conn.recv(BUFFER_SIZE)
 
-        #self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
+            #self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
 
-        self.handleNewCounterExample(conn, data)
+            self.srvr.handleNewCounterExample(conn, data)
 
-        q.task_done()
-        '''Kill the thread after use'''
-        #sys.exit()
+            '''Kill the thread after use'''
+            sys.exit()
 
 
     def startServer(self):
         ip, port = self.getServerIpPort(self.svrId)
-
-        pool = multiprocessing.pool.ThreadPool(int(NUM_OF_THREADS), self.runNewClientConn ,(q,))
 
         tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
@@ -429,11 +422,9 @@ class RamseyServer():
         while True: 
             tcpServer.listen(4) 
             (conn, (cliIP,cliPort)) = tcpServer.accept()
-            q.put([conn])
-            # newthread = self.ConnectionThread(conn, cliIP, cliPort, self) 
-            # newthread.start()
+            newthread = self.ConnectionThread(conn, cliIP, cliPort, self) 
+            newthread.start()
     
  
 svrId = sys.argv[1]
-q = Queue()
 ramseySrvr = RamseyServer(svrId)
