@@ -8,7 +8,7 @@ do
 		j="$i"
 	fi
 
-	ssh -o "StrictHostKeyChecking no" nikolas_chaconas@cstl-$j.cs.ucsb.edu 'bash -s 4' < './deploy.sh' &
+	ssh -o "StrictHostKeyChecking no" nikolas_chaconas@cstl-$j.cs.ucsb.edu 'bash -s 4' < './deploy_s.sh' &
 	echo "Sent to cstl-$j.cs.ucsb.edu"
 	echo "Check it out here: ssh nikolas_chaconas@cstl-$j.cs.ucsb.edu"
 done
