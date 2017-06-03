@@ -266,15 +266,15 @@ class RamseyServer():
         counterNum, bestCliqueCount, bestGraph = self.readMaxNumFromDB()
 
         updateState = False
-        try:
-            if counterNum > self.getCurrCounterNum():
-                updateState = True
+        
+        if counterNum > self.getCurrCounterNum():
+            updateState = True
 
-            elif bestCliqueCount < self.getBestCliqueCount() and counterNum == self.getCurrCounterNum():
-                updateState = True
+        elif bestCliqueCount < self.getBestCliqueCount() and counterNum == self.getCurrCounterNum():
+            updateState = True
 
-            if updateState:
-                self.updateState(counterNum, bestCliqueCount, bestGraph, writeToDB=False)
+        if updateState:
+            self.updateState(counterNum, bestCliqueCount, bestGraph, writeToDB=False)
 
 
     def replyToClient(self, conn, clientIndex):
