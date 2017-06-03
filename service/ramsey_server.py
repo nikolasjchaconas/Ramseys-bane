@@ -10,6 +10,9 @@ from read_write_lock import RWLock
 from subprocess import call
 import os
 import copy
+from multiprocessing.pool import ThreadPool
+import multiprocessing
+from Queue import Queue
 
 ######################Constants######################
 
@@ -129,30 +132,30 @@ class RamseyServer():
 
 
     def setBestCliqueCount(self, bestCliqueCount):
-        self.rwl.acquire_write()
+        #self.rwl.acquire_write()
         self.bestCliqueCount = bestCliqueCount
-        self.rwl.release()
+        #self.rwl.release()
 
 
     def setCurrCounterNum(self, counterNum):
-        self.rwl.acquire_write()
+        #self.rwl.acquire_write()
         self.currCounterNum = counterNum
-        self.rwl.release()
+        #self.rwl.release()
 
 
     def setIndexQueue(self, indexQueue):
-        self.rwl.acquire_write()
+        #self.rwl.acquire_write()
         self.indexQueue = copy.deepcopy(indexQueue)
-        self.rwl.release()
+        #self.rwl.release()
 
 
     def setBestGraph(self, graph):
-        self.rwl.acquire_write()
+        #elf.rwl.acquire_write()
         if graph:
             self.bestGraph = copy.deepcopy(graph)
         else:
             self.bestGraph = ''
-        self.rwl.release()
+        #self.rwl.release()
 
 
     def getAndSetNextIndex(self):
@@ -212,8 +215,8 @@ class RamseyServer():
         tmpIdxQueue = []
         ''' If the current clique count is 0, then the counter ex is found and no more indexes to be queued
         for that counter_ex number.'''
-        if self.getBestCliqueCount() != 0:
-            tmpGraph = self.getBestGraph()
+        if self.bestCliqueCount != 0:
+            tmpGraph = self.bestGraph
             length, cnt = len(tmpGraph), 1
 
             svrNum = int(self.svrId[-1])
@@ -239,17 +242,22 @@ class RamseyServer():
         return True
 
 
-    def updateState(self, counterNum, cliqueCnt, graph, updateGraph=False):
+    def updateState(self, counterNum, cliqueCnt, graph, writeToDB=True):
+        self.rwl.acquire_write()
+        if counterNum > self.currCounterNum or (counterNum == self.currCounterNum and cliqueCnt < self.bestCliqueCount):
+            '''Update current cunter num, clique count and graph.'''
+            self.setCurrCounterNum(counterNum)
+            self.setBestCliqueCount(cliqueCnt)
 
-        '''Update current cunter num, clique count and graph.'''
-        self.setCurrCounterNum(counterNum)
-        self.setBestCliqueCount(cliqueCnt)
+            ''' If a counter ex was found for the currCounterNum, new graph must be constructed
+            based on the current counter ex'''
+            
+            self.setBestGraph(graph)
+            self.fillIndexQueue()
 
-        ''' If a counter ex was found for the currCounterNum, new graph must be constructed
-        based on the current counter ex'''
-        
-        self.setBestGraph(graph)
-        self.fillIndexQueue()
+            if writeToDB:
+                self.insertIntoDB(counterNum, cliqueCnt, graph)
+        self.rwl.release()
 
 
     def updateStateFromDB(self):
@@ -257,7 +265,6 @@ class RamseyServer():
         counterNum, bestCliqueCount, bestGraph = self.readMaxNumFromDB()
 
         updateState = False
-        self.lock.acquire()
         try:
             if counterNum > self.getCurrCounterNum():
                 updateState = True
@@ -266,9 +273,7 @@ class RamseyServer():
                 updateState = True
 
             if updateState:
-                self.updateState(counterNum, bestCliqueCount, bestGraph)
-        finally:
-            self.lock.release()
+                self.updateState(counterNum, bestCliqueCount, bestGraph, writeToDB=False)
 
 
     def replyToClient(self, conn, clientIndex):
@@ -292,7 +297,6 @@ class RamseyServer():
 
 
     def handleNewCounterExample(self, conn, msg):
-        writeToDB = True
 
         '''The first part of input string is the current counter example computed by the client'''
         counterNum, cliqueCnt, clientIndex, graph = msg.split(':')
@@ -305,9 +309,7 @@ class RamseyServer():
             self.logger.debug('Encountered error: %s' %e)
             return
 
-        self.lock.acquire()
         try:
-
             if counterNum == self.getCurrCounterNum():
                 if cliqueCnt == 0:
                     '''If cliqueCount = 0 then the counter ex for the currCounterNum was found.
@@ -329,27 +331,9 @@ class RamseyServer():
                 elif self.getBestCliqueCount() != 0 and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
                     '''No more index to distribute; accept any graph not same as old one'''
                     self.updateState(counterNum, cliqueCnt, graph)
-                else:
-                    ''' Nothing to update; don't store anything in db'''
-                    writeToDB = False
 
             elif counterNum > self.getCurrCounterNum():
                 self.updateState(counterNum, cliqueCnt, graph)
-
-            else:
-                ''' Nothing to update; don't store anything in db'''
-                writeToDB = False
-
-            '''write to DB if currNum is greater any previous value'''
-            if writeToDB:
-                self.rwl.acquire_read()
-                counterNum, cliqueCnt, graph = self.currCounterNum, self.bestCliqueCount, self.bestGraph
-                self.rwl.release()
-
-                self.insertIntoDB(counterNum, cliqueCnt, graph)
-
-        finally:
-            self.lock.release()
 
         self.replyToClient(conn, clientIndex)
 
