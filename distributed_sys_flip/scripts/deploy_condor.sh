@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd ~/Ramseys-bane/distributed_sys_flip
-git stash
+git reset --hard origin/master
 git pull origin master
 make clean
 make
