@@ -13,12 +13,13 @@ boolean validateCount(set_t s, graph_t *g, clique_options *opts){
 
 int CliqueCount(int* g, int gsize, int currentClique){
   currentCliqueCount = currentClique;
-  int i;
+  int i, verifySize;
   graph_t* typeOne = graph_new(gsize);
   graph_t* typeZero = graph_new(gsize);
   for(i = 0; i < gsize*gsize; i++){
     int col = i%gsize;
     int row = (int) floor(i/gsize);
+    if(g[i] == 1 || g[i] == 0) verifySize++;
     if(g[i] == 1){
       GRAPH_ADD_EDGE(typeOne, row, col);
     }
@@ -26,6 +27,9 @@ int CliqueCount(int* g, int gsize, int currentClique){
       GRAPH_ADD_EDGE(typeZero, row, col);
     }
   }
+
+  // The size of the graph is wrong
+  if(verifySize < gsize*gsize) return currentClique;
 
   clique_options ramseyCounterOpts = {
   	reorder_by_default, NULL, clique_print_time, NULL, validateCount, NULL, NULL, 0

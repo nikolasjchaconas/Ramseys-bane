@@ -198,7 +198,7 @@ int threadedGreedyIndexPermute(int* graph, const int nodeCount, int cliqueCount,
 			}
 			pthread_rwlock_unlock(&bestCliqueCountMutex);
 
-			if(flips != 0 && flips % flipThreshold == 0) {
+			if(client_info->id == 0 && flips != 0 && flips % flipThreshold == 0) {
 				printf("\nT%d: %d flips have been made, polling coordinator!\n", client_info->id, flipThreshold);
 				sendCounterExampleToCoordinator(nodeCount, cliqueCount, 0, graph, client_info);
 				// try sending CPU
