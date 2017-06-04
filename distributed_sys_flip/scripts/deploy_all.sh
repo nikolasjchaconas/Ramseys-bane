@@ -35,7 +35,8 @@ printf "Check it out here: \nssh cs293b-3@ucsbsubmit.chtc.wisc.edu\n\n"
 
 echo "sending to CSTL"
 ./deploy_csil.sh
-# scp jobscriptfile clique@comet.sdsc.edu:Ramseys-bane/distributed_sys_flip
-# ssh -o "StrictHostKeyChecking no" clique@comet.sdsc.edu 'bash -s' < './deploy_comet.sh' &
+
+# echo "sending to comet"
+# ./deploy_comet.sh
 
 printf "\nSend to a total of 17 Euca nodes + 12 core Euca + 12 core Cornell + 2 Core Cornell + 8 core Chameleon + 250condor + 250*8core + 250*16core + 250*24core for a total of 12301 nodes!\n"
