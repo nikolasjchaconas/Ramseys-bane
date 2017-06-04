@@ -1,7 +1,7 @@
 #!/bin/bash
 cd ~/Ramseys-bane/distributed_sys_flip
+git fetch --all
 git reset --hard origin/master
-git pull origin master
 make clean
 make
 make run threads=$1
