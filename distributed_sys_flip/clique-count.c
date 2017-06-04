@@ -13,7 +13,8 @@ boolean validateCount(set_t s, graph_t *g, clique_options *opts){
 
 int CliqueCount(int* g, int gsize, int currentClique){
   currentCliqueCount = currentClique;
-  int i, verifySize;
+  int i;
+  int verifySize = 0;
   graph_t* typeOne = graph_new(gsize);
   graph_t* typeZero = graph_new(gsize);
   for(i = 0; i < gsize*gsize; i++){
