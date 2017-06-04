@@ -29,7 +29,7 @@ int CliqueCount(int* g, int gsize, int currentClique){
     }
   }
 
-  // The size of the graph is wrong
+  // Check if the size of the graph is wrong
   if(verifySize < gsize*gsize) return currentClique;
 
   clique_options ramseyCounterOpts = {
