@@ -1,4 +1,9 @@
 #!/bin/bash
+
+ssh -o "StrictHostKeyChecking no" nikolas_chaconas@cstl-01.cs.ucsb.edu 'bash -s' < './git_pull.sh' &
+
+sleep 10
+
 for i in {1..36}
 do
 	if [ "$i" -lt 10 ]

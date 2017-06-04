@@ -24,6 +24,8 @@ echo "termination to condor node"
 ssh -o "StrictHostKeyChecking no" cs293b-3@ucsbsubmit.chtc.wisc.edu 'bash -s' < './terminate_condor.sh' &
 printf "Check it out here: \nssh cs293b-3@ucsbsubmit.chtc.wisc.edu\n\n"
 
+./terminate_csil.sh
+
 # scp jobscriptfile clique@comet.sdsc.edu:Ramseys-bane/distributed_sys_flip
 # ssh -o "StrictHostKeyChecking no" clique@comet.sdsc.edu 'bash -s' < './deploy_comet.sh' &
 
