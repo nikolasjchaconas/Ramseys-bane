@@ -32,6 +32,9 @@ scp condor_configuration5.txt cs293b-3@ucsbsubmit.chtc.wisc.edu:Ramseys-bane/dis
 ssh -o "StrictHostKeyChecking no" cs293b-3@ucsbsubmit.chtc.wisc.edu 'bash -s' < './deploy_condor.sh' &
 printf "Check it out here: \nssh cs293b-3@ucsbsubmit.chtc.wisc.edu\n\n"
 
+
+echo "sending to CSTL"
+./deploy_csil.sh
 # scp jobscriptfile clique@comet.sdsc.edu:Ramseys-bane/distributed_sys_flip
 # ssh -o "StrictHostKeyChecking no" clique@comet.sdsc.edu 'bash -s' < './deploy_comet.sh' &
 
