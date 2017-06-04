@@ -3,3 +3,4 @@ clique
 .DS_Store
 /counter_examples/*
 nohup.out
+distributed_sys_flip/scripts/setup_script_cloudwatch
