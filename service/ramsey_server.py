@@ -24,6 +24,7 @@ BUFFER_SIZE = 1024*1024
 COUNTER_EX_DIR = 'counter_examples'
 MAX_CLIQUE_CNT = 999
 NO_OF_SERVERS = 7
+NUM_OF_THREADS = 3000
 
 ######################################################
 
@@ -99,34 +100,34 @@ class RamseyServer():
 ############################## Getter and setter methods ##################################################
 
     def getBestCliqueCount(self):
-        self.rwl.acquire_read()
+        #self.rwl.acquire_read()
         bestCliqueCount = self.bestCliqueCount
-        self.rwl.release()
+        #self.rwl.release()
 
         return bestCliqueCount
 
 
     def getBestGraph(self):
-        self.rwl.acquire_read()
+        #self.rwl.acquire_read()
         bestGraph = self.bestGraph
-        self.rwl.release()
+        #self.rwl.release()
         if not bestGraph:
             return []
         return bestGraph
 
 
     def getIndexQueue(self):
-        self.rwl.acquire_read()
+        #self.rwl.acquire_read()
         indexQueue = self.indexQueue
-        self.rwl.release()
+        #self.rwl.release()
 
         return indexQueue
 
 
     def getCurrCounterNum(self):
-        self.rwl.acquire_read()
+        #self.rwl.acquire_read()
         counterNum = self.currCounterNum
-        self.rwl.release()
+        #self.rwl.release()
 
         return counterNum
 
@@ -386,16 +387,19 @@ class RamseyServer():
             self.srvr = srvr
 
 
-        def run(self): 
-            
-            conn, recvMsg = self.conn, ''
+    def runNewClientConn(self, q):
+        while True:
+            items = q.get()
+            conn, recvMsg = items[0], ''
             data = conn.recv(BUFFER_SIZE)
 
             try:
                 counterNum, cliqueCnt, index, _ = data.split(':')
             except Exception as e:
                 conn.close()
-                sys.exit()
+                q.task_done()
+                return
+                #sys.exit()
             
             '''The msg will be ==> counter_num:clique_count:index:matrix'''
             dataSize = len(counterNum) + len(cliqueCnt) + len(index) + int(counterNum)*int(counterNum) + 3
@@ -403,16 +407,19 @@ class RamseyServer():
             while len(data) < dataSize:
                 data += conn.recv(BUFFER_SIZE)
 
-            #self.srvr.logger.debug('Received message: %s, %s, %s' %(counterNum, cliqueCnt, index))
+            #self.logger.debug('Received message: %s, %s, %s, %s' %(counterNum, cliqueCnt, index, threading.current_thread()))
 
-            self.srvr.handleNewCounterExample(conn, data)
+            self.handleNewCounterExample(conn, data)
 
-            '''Kill the thread after use'''
-            sys.exit()
+            q.task_done()
+        '''Kill the thread after use'''
+        #sys.exit()
 
 
     def startServer(self):
         ip, port = self.getServerIpPort(self.svrId)
+
+        pool = multiprocessing.pool.ThreadPool(int(NUM_OF_THREADS), self.runNewClientConn ,(q,))
 
         tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
@@ -422,9 +429,11 @@ class RamseyServer():
         while True: 
             tcpServer.listen(4) 
             (conn, (cliIP,cliPort)) = tcpServer.accept()
-            newthread = self.ConnectionThread(conn, cliIP, cliPort, self) 
-            newthread.start()
+            q.put([conn])
+            # newthread = self.ConnectionThread(conn, cliIP, cliPort, self) 
+            # newthread.start()
     
  
 svrId = sys.argv[1]
+q = Queue()
 ramseySrvr = RamseyServer(svrId)
