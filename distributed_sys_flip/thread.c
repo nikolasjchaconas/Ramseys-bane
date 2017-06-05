@@ -48,7 +48,7 @@ void printGraph(int *graph, const int nodeCount){
 	int j;
 	int value;
 	int cliqueCount;
-	
+
 	cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 
 	printf("%d %d", nodeCount, cliqueCount);
@@ -91,6 +91,22 @@ int sendCliqueZero(int *graph, int *nodeCount, client_struct *client_info){
 	return client_info->coordinator_return->clique_count;
 }
 
+int randomFlip(int *graph, int nodeCount, int cliqueCount) {
+	int index = getRandomIndex(nodeCount);
+
+	graph[index] ^= 1;
+
+	int newCount = CliqueCount(graph, nodeCount, cliqueCount);
+	printf("Random found %d\n", newCount);
+	if(newCount < cliqueCount) {
+		return newCount;
+	} else {
+		graph[index] ^= 1;
+		return cliqueCount;
+	}
+
+}
+
 void *findCounterExample(void* args){
 	int *graph;
 	int *temp;
@@ -122,14 +138,17 @@ void *findCounterExample(void* args){
 		//only done when indices exhausted
 		if(random_explore_phase) {
 			random_explore_phase = 0;
+			copyGraph(coordinator_return->out_matrix, graph, nodeCount);
 
 			printf("T%d: Beginning Random explore phase on node count %d\n", client_info->id, nodeCount);
 			//printGraph(graph, nodeCount);
-			bzero(graph, LARGEST_MATRIX_SIZE);
-			initialize_50_50(graph, nodeCount);
+			// bzero(graph, LARGEST_MATRIX_SIZE);
+			// initialize_50_50(graph, nodeCount);
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
+			printf("T%d: Original clique count is %d\n", client_info->id, cliqueCount);
 			for(i = 0; i < nodeCount/5; i++) {
-				cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);
+				// cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);
+				cliqueCount = randomFlip(graph, nodeCount, cliqueCount);
 				if(cliqueCount == 0) {
 					printf("T%d: WOW random found a clique count of zero, bravo!\n", client_info->id);
 					break;
