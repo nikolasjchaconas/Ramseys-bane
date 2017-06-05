@@ -98,7 +98,7 @@ int randomFlip(int *graph, int nodeCount, int cliqueCount) {
 
 	int newCount = CliqueCount(graph, nodeCount, cliqueCount);
 	printf("Random found %d\n", newCount);
-	if(newCount < cliqueCount) {
+	if(newCount <= cliqueCount) {
 		return newCount;
 	} else {
 		graph[index] ^= 1;
@@ -146,7 +146,7 @@ void *findCounterExample(void* args){
 			// initialize_50_50(graph, nodeCount);
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 			printf("T%d: Original clique count is %d\n", client_info->id, cliqueCount);
-			for(i = 0; i < nodeCount/5; i++) {
+			for(i = 0; i < nodeCount; i++) {
 				// cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);
 				cliqueCount = randomFlip(graph, nodeCount, cliqueCount);
 				if(cliqueCount == 0) {
@@ -169,7 +169,7 @@ void *findCounterExample(void* args){
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 			printf("T%d: Embedding got %d\n", client_info->id, cliqueCount);
 
-			for(i = 0; i < nodeCount/5; i++) {
+			for(i = 0; i < nodeCount; i++) {
 				permuteLastColumn(temp, nodeCount);
 				try_permute_clique = CliqueCount(temp, nodeCount, cliqueCount);
 				printf("T%d: Embedding got %d\n", client_info->id, try_permute_clique);

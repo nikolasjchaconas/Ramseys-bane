@@ -30,7 +30,10 @@ int CliqueCount(int* g, int gsize, int currentClique){
   }
 
   // Check if the size of the graph is wrong
-  if(verifySize < gsize*gsize) return currentClique;
+  if(verifySize < gsize*gsize) {
+    printf("Invalid Graph Format\n");
+    exit(1);
+  }
 
   clique_options ramseyCounterOpts = {
   	reorder_by_default, NULL, clique_print_time, NULL, validateCount, NULL, NULL, 0
