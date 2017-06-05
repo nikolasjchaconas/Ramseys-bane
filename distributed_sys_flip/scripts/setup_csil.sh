@@ -1,5 +1,6 @@
 #!/bin/bash
 cd ~/Ramseys-bane/distributed_sys_flip
+make clean
 make
 make run threads=$1
 sleep 5m
