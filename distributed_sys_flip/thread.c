@@ -22,9 +22,6 @@ void initRandomGraph(int* graph, const int nodeCount){
 	int edgesToPlaceInRow = ceil((nodeCount-1)/2);
 	int edgesPlacedInRow = 0;
 	int i;
-	int row;
-
-	int edgesInPreviousRow = 0;
 
 	for(i = 0; i < nodeCount-1; i++){
 		int edgeValue = 1;
@@ -51,8 +48,8 @@ void printGraph(int *graph, const int nodeCount){
 	int j;
 	int value;
 	int cliqueCount;
-
-	cliqueCount = CliqueCount(graph, nodeCount, cliqueCount);
+	
+	cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 
 	printf("%d %d", nodeCount, cliqueCount);
 
@@ -100,14 +97,10 @@ void *findCounterExample(void* args){
 	int nodeCount;
 	int cliqueCount;
 	int index;
-	int rc;
-	long t;
 	int i;
 	int coordinator_node_count;
-	int received_number;
 	int random_explore_phase = 0;
 	int permute_embedded = 0;
-	int embedded = 0;
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
 
@@ -231,7 +224,6 @@ void *findCounterExample(void* args){
 }
 
 int main (int argc, char *argv[]){
-	int nodeCount;
 	int rc;
 	int t;
 	int i;
