@@ -243,9 +243,10 @@ class RamseyServer():
         return True
 
 
-    def updateState(self, counterNum, cliqueCnt, graph, writeToDB=True):
+    def updateState(self, counterNum, cliqueCnt, graph, writeToDB=True, forceUpdate=False):
         self.rwl.acquire_write()
-        if counterNum > self.currCounterNum or (counterNum == self.currCounterNum and cliqueCnt < self.bestCliqueCount):
+        if counterNum > self.currCounterNum or (counterNum == self.currCounterNum and cliqueCnt < self.bestCliqueCount)\
+        or forceUpdate:
             '''Update current cunter num, clique count and graph.'''
             self.setCurrCounterNum(counterNum)
             self.setBestCliqueCount(cliqueCnt)
@@ -322,7 +323,7 @@ class RamseyServer():
                 self.logger.debug(logMsg)
                 self.postOnSlack()
 
-            elif cliqueCnt < self.getBestCliqueCount():
+            elif cliqueCnt <= self.getBestCliqueCount() and not self.isGraphsEqualToBestGraph(graph):
                 ''' Found a graph with better clique count '''
                 self.updateState(counterNum, cliqueCnt, graph)
                 logMsg = 'Found better clique count %d for counter number %d' %(cliqueCnt, counterNum)
@@ -330,7 +331,7 @@ class RamseyServer():
 
             elif self.getBestCliqueCount() != 0 and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
                 '''No more index to distribute; accept any graph not same as old one'''
-                self.updateState(counterNum, cliqueCnt, graph)
+                self.updateState(counterNum, cliqueCnt, graph, forceUpdate=True)
 
         elif counterNum > self.getCurrCounterNum():
             self.updateState(counterNum, cliqueCnt, graph)
