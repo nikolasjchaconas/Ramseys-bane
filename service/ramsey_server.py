@@ -323,7 +323,7 @@ class RamseyServer():
                 self.logger.debug(logMsg)
                 self.postOnSlack()
 
-            elif cliqueCnt <= self.getBestCliqueCount() and not self.isGraphsEqualToBestGraph(graph) and not self.getIndexQueue():
+            elif cliqueCnt <= self.getBestCliqueCount() and not self.getIndexQueue() and not self.isGraphsEqualToBestGraph(graph):
                 ''' Found a graph with better clique count '''
                 self.updateState(counterNum, cliqueCnt, graph)
                 logMsg = 'Found better clique count %d for counter number %d' %(cliqueCnt, counterNum)
