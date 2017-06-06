@@ -91,19 +91,23 @@ int sendCliqueZero(int *graph, int *nodeCount, client_struct *client_info){
 	return client_info->coordinator_return->clique_count;
 }
 
-int randomFlip(int *graph, int nodeCount, int cliqueCount) {
+int randomFlip(int *graph, int nodeCount, int cliqueCount, int *temp) {
 	int index = getRandomIndex(nodeCount);
+	int ret;
+
+	while(temp[index]) index = getRandomIndex(nodeCount);
 
 	graph[index] ^= 1;
 
 	int newCount = CliqueCount(graph, nodeCount, cliqueCount);
 	printf("Random found %d\n", newCount);
 	if(newCount <= cliqueCount) {
-		return newCount;
+		ret = newCount;
 	} else {
 		graph[index] ^= 1;
-		return cliqueCount;
+		ret = cliqueCount;
 	}
+	temp[index] = 1;
 
 }
 
@@ -146,9 +150,10 @@ void *findCounterExample(void* args){
 			// initialize_50_50(graph, nodeCount);
 			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 			printf("T%d: Original clique count is %d\n", client_info->id, cliqueCount);
+			bzero(temp, LARGEST_MATRIX_SIZE);
 			for(i = 0; i < nodeCount; i++) {
 				// cliqueCount = randomGraphExplore(graph, nodeCount, cliqueCount);
-				cliqueCount = randomFlip(graph, nodeCount, cliqueCount);
+				cliqueCount = randomFlip(graph, nodeCount, cliqueCount, temp);
 				if(cliqueCount == 0) {
 					printf("T%d: WOW random found a clique count of zero, bravo!\n", client_info->id);
 					break;
