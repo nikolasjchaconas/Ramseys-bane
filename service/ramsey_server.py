@@ -310,7 +310,7 @@ class RamseyServer():
         except Exception as e:
             '''In case client didn't in right format; ignore that int conversion and set currNum to 0'''
             self.logger.debug('Encountered error: %s' %e)
-            return
+            raise
 
         if counterNum == self.getCurrCounterNum():
             if cliqueCnt == 0:
@@ -397,23 +397,23 @@ class RamseyServer():
 
             try:
                 counterNum, cliqueCnt, index, _ = data.split(':')
-            except Exception as e:
+            
+                '''The msg will be ==> counter_num:clique_count:index:matrix'''
+                dataSize = len(counterNum) + len(cliqueCnt) + len(index) + int(counterNum)*int(counterNum) + 3
+                
+                while len(data) < dataSize:
+                    data += conn.recv(BUFFER_SIZE)
+
+                #self.logger.debug('Received message: %s, %s, %s, %s' %(counterNum, cliqueCnt, index, threading.current_thread()))
+
+                self.handleNewCounterExample(conn, data)
+
+                q.task_done()
+
+        except Exception as e:
+                self.logger.debug('Encountered error: %s' %e)
                 conn.close()
                 q.task_done()
-                return
-                #sys.exit()
-            
-            '''The msg will be ==> counter_num:clique_count:index:matrix'''
-            dataSize = len(counterNum) + len(cliqueCnt) + len(index) + int(counterNum)*int(counterNum) + 3
-            
-            while len(data) < dataSize:
-                data += conn.recv(BUFFER_SIZE)
-
-            #self.logger.debug('Received message: %s, %s, %s, %s' %(counterNum, cliqueCnt, index, threading.current_thread()))
-
-            self.handleNewCounterExample(conn, data)
-
-            q.task_done()
         '''Kill the thread after use'''
         #sys.exit()
 
