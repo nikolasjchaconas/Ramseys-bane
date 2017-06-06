@@ -151,7 +151,7 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct *client_info
 		// type zero stuff
 		printf("\n\nBeginning Zero Flips\n");
 		getMaxCliqueParticipatingNode(typeZeroCliqueSets, typeZeroCliqueCount, nodeCount, worstTypeZeroNodeArray);
-		for(j = typeZeroCliqueCount - 1; j >= 0; j--) {
+		for(j = worstTypeArraySize - 1; j >= 0; j--) {
 			int failures = 0;
 			worstTypeZeroSet = worstTypeZeroNodeArray[j];
 			if(worstTypeZeroSet != NULL) {
@@ -184,7 +184,6 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct *client_info
 					}
 
 					getMaxCliqueParticipatingNode(zeroCliquesWithWorstNode, cliquesWithNodeCount, nodeCount, secondWorstTypeZeroNodeArray);
-					
 					for(k = worstTypeArraySize - 1; k >= 0; k--){
 						secondWorstTypeZeroSet = secondWorstTypeZeroNodeArray[k];
 						if(secondWorstTypeZeroSet != NULL && set_size(secondWorstTypeZeroSet) != 1) {
@@ -309,7 +308,7 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct *client_info
 		// type one stuff
 		printf("\n\nBeginning One Flips\n");
 		getMaxCliqueParticipatingNode(typeOneCliqueSets, typeOneCliqueCount, nodeCount, worstTypeOneNodeArray);
-		for(j = typeOneCliqueCount - 1; j >= 0; j--) {
+		for(j = worstTypeArraySize - 1; j >= 0; j--) {
 			int failures = 0;
 			worstTypeOneSet = worstTypeOneNodeArray[j];
 			if(worstTypeOneSet != NULL) {
