@@ -108,7 +108,7 @@ int randomFlip(int *graph, int nodeCount, int cliqueCount, int *temp) {
 		ret = cliqueCount;
 	}
 	temp[index] = 1;
-
+	return 0;
 }
 
 void *findCounterExample(void* args){
@@ -121,6 +121,7 @@ void *findCounterExample(void* args){
 	int coordinator_node_count;
 	int random_explore_phase = 0;
 	int permute_embedded = 0;
+	int replace_me = NUM_THREADS == 1 ? 1 : 0;
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
 
@@ -225,12 +226,17 @@ void *findCounterExample(void* args){
 				printf("T%d: Solving Counter Example %d at index %d\n", client_info->id, nodeCount, index);
 				copyGraph(client_info->coordinator_return->out_matrix, graph, nodeCount);
 			}
-			printf("T%d: Continuing to Greedy Index Permute\n", client_info->id);
 		} else {
 			continue;
 		}
 
-		cliqueCount = threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index, client_info);
+		if(replace_me) {
+			printf("T%d: Continuing to Replace Me\n", client_info->id);
+			cliqueCount = replaceMe(graph, nodeCount, cliqueCount, client_info);
+		} else {
+			printf("T%d: Continuing to Greedy Index Permute\n", client_info->id);
+			cliqueCount = threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index, client_info);
+		}
 
 		pthread_rwlock_rdlock(&bestCliqueCountMutex);
 		printf("T%d: best clique count is %d and old clique count is %d\n", client_info->id, bestCliqueCount, cliqueCount);

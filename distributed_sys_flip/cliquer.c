@@ -1663,7 +1663,7 @@ boolean clique_print_time(int level, int i, int n, int max,
 	static int prev_max=100;
 	static int prev_level=0;
 	FILE *fp=opts->output;
-	int j;
+	// int j;
 
 	if (fp==NULL)
 		fp=stdout;

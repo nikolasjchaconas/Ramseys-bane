@@ -44,7 +44,7 @@ int CliqueCount(int* g, int gsize, int currentClique){
   if(typeOneCount > currentClique){
     return typeOneCount;
   }
-  int typeZeroCount = clique_find_all(typeZero, 10, 10, FALSE, &ramseyCounterOpts);
+  // int typeZeroCount = clique_find_all(typeZero, 10, 10, FALSE, &ramseyCounterOpts);
   graph_free(typeZero);
   return ramseyCounterOpts.clique_list_length;
 }

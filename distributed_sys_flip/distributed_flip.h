@@ -13,6 +13,7 @@ extern int WRITE_TO_FILE;
 #include "clique-count.h"
 #include "client_protocol/client.h"
 #include "greedyGraphPermute.h"
+#include "heuristicsearch.h"
 
 void setThreads(int threading_type);
 void initialize_50_50(int *matrix, int counter_number);

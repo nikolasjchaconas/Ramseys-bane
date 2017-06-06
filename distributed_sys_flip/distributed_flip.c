@@ -7,8 +7,8 @@
 
 
 void initialize_50_50(int *matrix, int counter_number) {
-	int edgesToPlace = (counter_number*(counter_number-1))/4;
-	int rowToPlace = 0;
+	// int edgesToPlace = (counter_number*(counter_number-1))/4;
+	// int rowToPlace = 0;
 	int edgesToPlaceInRow = ceil((counter_number-1)/2);
 	int edgesPlacedInRow = 0;
 	int i;
