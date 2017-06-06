@@ -92,14 +92,15 @@ void sendGraphToCoordinator(graph_t *typeOneGraph, const int nodeCount, client_s
 	sendCounterExampleToCoordinator(nodeCount, cliqueCount, 0, g, client_info);
 }
 
-int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info) {
+int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct *client_info) {
 	int j;
 	int flipThreshold = 20;
-	set_t typeOneCliqueSets[cliqueCount*100];
+	int large_number = cliqueCount*100;
+	set_t *typeOneCliqueSets = (set_t*)malloc(sizeof(set_t)*large_number);
 	clique_options typeOneOptions = {
 		reorder_by_default, NULL, clique_print_time, NULL, addSet, NULL, typeOneCliqueSets, 0
 	};
-	set_t typeZeroCliqueSets[cliqueCount*100];
+	set_t *typeZeroCliqueSets = (set_t*)malloc(sizeof(set_t)*large_number);
 	clique_options typeZeroOptions = {
 		reorder_by_default, NULL, clique_print_time, NULL, addSet, NULL, typeZeroCliqueSets, 0
 	};
@@ -217,10 +218,8 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info
 								typeZeroCliqueCount, tempZeroCount, typeOneCliqueCount, tempOneCount);
 							typeOneCliqueCount = tempOneCount;
 							typeZeroCliqueCount = tempZeroCount;
-							int lm;
-							for(lm = 0; lm < 5; lm++) {
-								sendGraphToCoordinator(typeOneGraph, nodeCount, client_info, 0, typeOneCliqueCount + typeZeroCliqueCount);
-							}
+
+							sendGraphToCoordinator(typeOneGraph, nodeCount, client_info, 0, typeOneCliqueCount + typeZeroCliqueCount);
 							if((client_info->coordinator_return->counter_number > nodeCount) || (client_info->coordinator_return->clique_count < (typeZeroCliqueCount + typeOneCliqueCount))) {
 								//bail brotha
 								constructGraph(typeOneGraph, g, nodeCount);
@@ -265,10 +264,17 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info
 		//free resources
 		int it;
 		printf("freeing here\n");
-		for (it = 0; it < cliqueCount*10; ++it)
+		for (it = 0; it < large_number; ++it)
 		{
-			typeOneCliqueSets[it] = NULL;
-			typeZeroCliqueSets[it] = NULL;
+			if(typeOneCliqueSets[it] != NULL) {
+				set_free(typeOneCliqueSets[it]);
+				typeOneCliqueSets[it] = NULL;
+			}
+			
+			if(typeZeroCliqueSets[it] != NULL) {
+				set_free(typeZeroCliqueSets[it]);
+				typeZeroCliqueSets[it] = NULL;
+			}
 		}
 
 		for(j = 0; j < worstTypeArraySize; j++){
@@ -370,10 +376,10 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info
 								typeOneCliqueCount, tempOneCount, typeZeroCliqueCount, tempZeroCount);
 							typeZeroCliqueCount = tempZeroCount;
 							typeOneCliqueCount = tempOneCount;
-							int lm;
-							for(lm = 0; lm < 5; lm++) {
-								sendGraphToCoordinator(typeOneGraph, nodeCount, client_info, 0, typeZeroCliqueCount + typeOneCliqueCount);
-							}
+
+
+							sendGraphToCoordinator(typeOneGraph, nodeCount, client_info, 0, typeZeroCliqueCount + typeOneCliqueCount);
+
 							if((client_info->coordinator_return->counter_number > nodeCount) || (client_info->coordinator_return->clique_count < (typeOneCliqueCount + typeZeroCliqueCount))) {
 								//bail brotha
 								printf("bailing!\n");
@@ -419,10 +425,17 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info
 		}
 		//free resources
 		printf("freeing here\n");
-		for (it = 0; it < cliqueCount*10; ++it)
+		for (it = 0; it < large_number; ++it)
 		{
-			typeOneCliqueSets[it] = NULL;
-			typeOneCliqueSets[it] = NULL;
+			if(typeOneCliqueSets[it] != NULL) {
+				set_free(typeOneCliqueSets[it]);
+				typeOneCliqueSets[it] = NULL;
+			}
+			
+			if(typeZeroCliqueSets[it] != NULL) {
+				set_free(typeZeroCliqueSets[it]);
+				typeZeroCliqueSets[it] = NULL;
+			}
 		}
 
 		for(j = 0; j < worstTypeArraySize; j++){
@@ -439,10 +452,10 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info
 		}
 
 		typeOneOptions.clique_list_length = 0;
-		typeOneOptions.clique_list_length = 0;
+		typeZeroOptions.clique_list_length = 0;
 
 		clique_find_all(typeOneGraph, 10, 10, FALSE, &typeOneOptions);
-		clique_find_all(typeOneGraph, 10, 10, FALSE, &typeOneOptions);
+		clique_find_all(typeZeroGraph, 10, 10, FALSE, &typeZeroOptions);
 		//end of type one stuff
 	}
 	//we found zero, send it baby
