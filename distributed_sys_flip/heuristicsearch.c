@@ -149,7 +149,7 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info
 				int worstNode = -1;
 				int secondWorstNode = -1;
 
-				worstTypeZeroNodeSetCount = set_size(worstTypeZeroSet);
+				worstTypeZeroNodeSetCount = worstTypeArraySize;
 				set_t zeroCliquesWithWorstNode[worstTypeZeroNodeSetCount];
 
 				int m;
@@ -302,7 +302,7 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct* client_info
 				int worstNode = -1;
 				int secondWorstNode = -1;
 
-				worstTypeOneNodeSetCount = set_size(worstTypeOneSet);
+				worstTypeOneNodeSetCount = worstTypeArraySize;
 				set_t OneCliquesWithWorstNode[worstTypeOneNodeSetCount];
 
 				int m;
