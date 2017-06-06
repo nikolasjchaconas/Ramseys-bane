@@ -410,10 +410,10 @@ class RamseyServer():
 
                 q.task_done()
 
-        except Exception as e:
-                self.logger.debug('Encountered error: %s' %e)
-                conn.close()
-                q.task_done()
+            except Exception as e:
+                    self.logger.debug('Encountered error: %s' %e)
+                    conn.close()
+                    q.task_done()
         '''Kill the thread after use'''
         #sys.exit()
 
