@@ -63,6 +63,7 @@ class RamseyServer():
     def initDbConnection(self):
 
         db_node = random.choice(self.config['db_nodes'])
+        self.logger.debug('Connecting to DB: %s' %db_node)
         self.db = DBStore(DB_NAME, DB_USER, db_node)
 
         create_table = 'CREATE TABLE IF NOT EXISTS '+ COUNTER_EX_TABLE 
