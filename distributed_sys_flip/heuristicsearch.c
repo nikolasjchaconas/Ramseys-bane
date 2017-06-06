@@ -17,6 +17,7 @@ void getMaxCliqueParticipatingNode(set_t* cliques, const int nrCliques, const in
 		set_t tmp = set_duplicate(unionSet);
 		set_union(unionSet, tmp, cliques[i]);
 		set_free(tmp);
+		tmp = NULL;
 	}
 
 	int nodeInCliqueCount = 0;
@@ -37,6 +38,7 @@ void getMaxCliqueParticipatingNode(set_t* cliques, const int nrCliques, const in
 		SET_ADD_ELEMENT(worstNodeArray[nodeInCliqueCount], cliqueNode);
 	}
 	set_free(unionSet);
+	unionSet = NULL;
 }
 
 const int getCliquesWithNode(const int node, set_t* cliques, const int cliqueNr, set_t* cliquesWithNode){
@@ -97,10 +99,17 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct *client_info
 	int flipThreshold = 20;
 	int large_number = cliqueCount*100;
 	set_t *typeOneCliqueSets = (set_t*)malloc(sizeof(set_t)*large_number);
+	for(j = 0; j < large_number; j++) {
+		typeOneCliqueSets[j] = NULL;
+	}
+
 	clique_options typeOneOptions = {
 		reorder_by_default, NULL, clique_print_time, NULL, addSet, NULL, typeOneCliqueSets, 0
 	};
 	set_t *typeZeroCliqueSets = (set_t*)malloc(sizeof(set_t)*large_number);
+	for(j = 0; j < large_number; j++) {
+		typeZeroCliqueSets[j] = NULL;
+	}
 	clique_options typeZeroOptions = {
 		reorder_by_default, NULL, clique_print_time, NULL, addSet, NULL, typeZeroCliqueSets, 0
 	};
