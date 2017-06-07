@@ -129,7 +129,7 @@ int replaceMe(int* g, int nodeCount, int cliqueCount, client_struct *client_info
 
 	// Add coordinator talk
 	while(typeZeroCliqueCount + typeOneCliqueCount > 0 ) {
-		const int worstTypeArraySize = typeZeroCliqueCount + typeOneCliqueCount;
+		const int worstTypeArraySize = typeZeroCliqueCount + typeOneCliqueCount + 1;
 		set_t worstTypeOneNodeArray[worstTypeArraySize];
 		for(j = 0; j < worstTypeArraySize; j++){
 			worstTypeOneNodeArray[j] = NULL;
