@@ -108,7 +108,7 @@ int randomFlip(int *graph, int nodeCount, int cliqueCount, int *temp) {
 		ret = cliqueCount;
 	}
 	temp[index] = 1;
-	return 0;
+	return ret;
 }
 
 void *findCounterExample(void* args){
