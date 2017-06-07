@@ -232,14 +232,15 @@ void *findCounterExample(void* args){
 
 		if(replace_me) {
 			printf("T%d: Continuing to Replace Me\n", client_info->id);
-			cliqueCount = replaceMe(graph, nodeCount, cliqueCount, client_info);
+			replaceMe(graph, nodeCount, cliqueCount, client_info);
 		} else {
 			printf("T%d: Continuing to Greedy Index Permute\n", client_info->id);
-			cliqueCount = threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index, client_info);
+			threadedGreedyIndexPermute(graph, nodeCount, cliqueCount, index, client_info);
 		}
 
 		pthread_rwlock_rdlock(&bestCliqueCountMutex);
 		printf("T%d: best clique count is %d and old clique count is %d\n", client_info->id, bestCliqueCount, cliqueCount);
+		cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
 		if(cliqueCount == 0) {
 			// send example to coordinator
 			int ret = sendCliqueZero(graph, &nodeCount, client_info);
