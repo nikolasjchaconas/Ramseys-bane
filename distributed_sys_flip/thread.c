@@ -122,6 +122,7 @@ void *findCounterExample(void* args){
 	int random_explore_phase = 0;
 	int permute_embedded = 0;
 	int replace_me = NUM_THREADS == 1 ? 1 : 0;
+	int total_embeds = 0;
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
 
@@ -160,45 +161,56 @@ void *findCounterExample(void* args){
 					break;
 				}
 			}
-		} else if (permute_embedded) {
+		} else if (permute_embedded && total_embeds != 5) {
 			int try_permute_clique;
 			permute_embedded = 0;
 
 			//embed counter example into next index in graph and temp
 			bzero(graph, LARGEST_MATRIX_SIZE);
 			bzero(temp, LARGEST_MATRIX_SIZE);
-			copyMatrix(coordinator_return->out_matrix, nodeCount - 1, graph, nodeCount);
-			copyMatrix(coordinator_return->out_matrix, nodeCount - 1, temp, nodeCount);
+			copyGraph(coordinator_return->out_matrix, graph, nodeCount - 1);
+			copyGraph(coordinator_return->out_matrix, temp, nodeCount - 1);
 
-			printf("T%d: \nTrying to embed %dx%d graph into %dx%d graph\n", client_info->id, nodeCount-1,nodeCount-1, nodeCount,nodeCount);
-			permuteLastColumn(graph, nodeCount);
-			cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
-			printf("T%d: Embedding got %d\n", client_info->id, cliqueCount);
+			while(total_embeds != 10) {
+				copyMatrix(temp, nodeCount - 1, graph, nodeCount);
+				bzero(temp, LARGEST_MATRIX_SIZE);
+				copyGraph(graph, temp, nodeCount);
 
-			for(i = 0; i < nodeCount/10; i++) {
-				permuteLastColumn(temp, nodeCount);
-				try_permute_clique = CliqueCount(temp, nodeCount, cliqueCount);
-				printf("T%d: Embedding got %d\n", client_info->id, try_permute_clique);
+				if(total_embeds != 0) nodeCount++;
+				printf("T%d: \nTrying to embed %dx%d graph into %dx%d graph\n", client_info->id, nodeCount-1,nodeCount-1, nodeCount,nodeCount);
+				permuteLastColumn(graph, nodeCount);
+				cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
+				printf("T%d: Embedding got %d\n", client_info->id, cliqueCount);
+				for(i = 0; i < nodeCount/10; i++) {
+					permuteLastColumn(temp, nodeCount);
+					try_permute_clique = CliqueCount(temp, nodeCount, cliqueCount);
+					printf("T%d: Embedding got %d\n", client_info->id, try_permute_clique);
 
-				if(try_permute_clique < cliqueCount) {
-					copyGraph(temp, graph, nodeCount);
-					cliqueCount = try_permute_clique;
-					printf("T%d: New best embedding is %d\n", client_info->id, cliqueCount);
+					if(try_permute_clique < cliqueCount) {
+						copyGraph(temp, graph, nodeCount);
+						cliqueCount = try_permute_clique;
+						printf("T%d: New best embedding is %d\n", client_info->id, cliqueCount);
+					}
+
+					if(cliqueCount == 0) {
+						printf("T%d: WOW permuting a clique count of zero, bravo!\n", client_info->id);
+						break;
+					}
+
+					// reset temp and try again
+					wipeLastColumn(temp, nodeCount);
 				}
-
-				if(cliqueCount == 0) {
-					printf("T%d: WOW permuting a clique count of zero, bravo!\n", client_info->id);
-					break;
-				}
-
-				// reset temp and try again
-				wipeLastColumn(temp, nodeCount);
+				bzero(temp, LARGEST_MATRIX_SIZE);
+				copyGraph(graph, temp, nodeCount);
+				total_embeds++;
 			}
+
 			printf("\nT%d: Embedding ended with cliqueCount of %d\n", client_info->id, cliqueCount);
 		}
 
 		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 1, graph, client_info);
 		sendCPUCycles(client_info);
+		permute_embedded = 1;
 
 		if(coordinator_node_count >= nodeCount) {
 			index = coordinator_return->index;
