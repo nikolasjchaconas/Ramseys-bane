@@ -171,7 +171,7 @@ void *findCounterExample(void* args){
 			copyGraph(coordinator_return->out_matrix, graph, nodeCount - 1);
 			copyGraph(coordinator_return->out_matrix, temp, nodeCount - 1);
 
-			while(total_embeds != 10) {
+			while(total_embeds != 5) {
 				if(total_embeds != 0) nodeCount++;
 				copyMatrix(temp, nodeCount - 1, graph, nodeCount);
 				bzero(temp, LARGEST_MATRIX_SIZE);
@@ -210,7 +210,6 @@ void *findCounterExample(void* args){
 
 		coordinator_node_count = sendCounterExampleToCoordinator(nodeCount, cliqueCount, 1, graph, client_info);
 		sendCPUCycles(client_info);
-		permute_embedded = 1;
 
 		if(coordinator_node_count >= nodeCount) {
 			index = coordinator_return->index;
