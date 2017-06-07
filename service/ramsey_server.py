@@ -365,11 +365,11 @@ class RamseyServer():
         self.createExampleFile(currNum, graph)
         try:
             cmd = 'curl -F file=@' + COUNTER_EX_DIR + '/' + str(currNum) + '.txt'
-            cmd += ' -F channels=#counter_examples -F token=***REMOVED***'
+            cmd += ' -F channels=#counter_examples -F token=xoxp-168043439156-168044120404-175871744339-d470018d55873ffc1f59b0e8b1d42f17'
             cmd += ' https://slack.com/api/files.upload'
             # cmd = "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\""
             # cmd += str(self.bestCliqueCount) + "-" + self.bestGraph 
-            # cmd += "\"}' ***REMOVED***"
+            # cmd += "\"}' API_WEBHOOK"
             
             os.system(cmd)
         except Exception as e:
