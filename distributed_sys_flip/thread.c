@@ -171,7 +171,7 @@ void *findCounterExample(void* args){
 			copyGraph(coordinator_return->out_matrix, graph, nodeCount - 1);
 			copyGraph(coordinator_return->out_matrix, temp, nodeCount - 1);
 
-			while(total_embeds != 5) {
+			while(total_embeds != 2) {
 				if(total_embeds != 0) nodeCount++;
 				copyMatrix(temp, nodeCount - 1, graph, nodeCount);
 				bzero(temp, LARGEST_MATRIX_SIZE);
