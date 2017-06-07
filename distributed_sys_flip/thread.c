@@ -122,7 +122,6 @@ void *findCounterExample(void* args){
 	int random_explore_phase = 0;
 	int permute_embedded = 0;
 	int replace_me = NUM_THREADS == 1 ? 1 : 0;
-	int total_embeds = 0;
 	client_struct *client_info;
 	coordinator_struct *coordinator_return;
 
@@ -161,9 +160,10 @@ void *findCounterExample(void* args){
 					break;
 				}
 			}
-		} else if (permute_embedded && total_embeds != 5) {
+		} else if (permute_embedded) {
 			int try_permute_clique;
 			permute_embedded = 0;
+			int total_embeds = 0;
 
 			//embed counter example into next index in graph and temp
 			bzero(graph, LARGEST_MATRIX_SIZE);
@@ -172,11 +172,11 @@ void *findCounterExample(void* args){
 			copyGraph(coordinator_return->out_matrix, temp, nodeCount - 1);
 
 			while(total_embeds != 10) {
+				if(total_embeds != 0) nodeCount++;
 				copyMatrix(temp, nodeCount - 1, graph, nodeCount);
 				bzero(temp, LARGEST_MATRIX_SIZE);
 				copyGraph(graph, temp, nodeCount);
 
-				if(total_embeds != 0) nodeCount++;
 				printf("T%d: \nTrying to embed %dx%d graph into %dx%d graph\n", client_info->id, nodeCount-1,nodeCount-1, nodeCount,nodeCount);
 				permuteLastColumn(graph, nodeCount);
 				cliqueCount = CliqueCount(graph, nodeCount, INT_MAX);
